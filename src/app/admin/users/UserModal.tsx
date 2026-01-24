@@ -94,47 +94,31 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
           if (assignError) throw assignError
         }
       } else {
-        // Create new user via Supabase Auth
+        // Create new user via API route (doesn't sign out admin)
         if (!password) {
           setError('Password is required for new users')
           setIsLoading(false)
           return
         }
 
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-            },
+        const response = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            email,
+            password,
+            fullName,
+            role,
+            lineIds: selectedLines,
+          }),
         })
 
-        if (authError) throw authError
+        const result = await response.json()
 
-        if (authData.user) {
-          // Update the profile with the correct role
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ role: role })
-            .eq('id', authData.user.id)
-
-          if (profileError) throw profileError
-
-          // Add line assignments
-          if (selectedLines.length > 0) {
-            const assignments = selectedLines.map((lineId) => ({
-              user_id: authData.user!.id,
-              line_id: lineId,
-            }))
-
-            const { error: assignError } = await supabase
-              .from('user_line_assignments')
-              .insert(assignments)
-
-            if (assignError) throw assignError
-          }
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create user')
         }
       }
 
