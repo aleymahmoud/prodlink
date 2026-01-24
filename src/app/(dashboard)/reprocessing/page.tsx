@@ -5,6 +5,7 @@ import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
 import { useUser } from '@/features/auth/hooks/useUser'
+import { useTranslation } from '@/shared/i18n'
 import { Line, Product, Reason, ReprocessingEntryWithRelations } from '@/shared/types/database'
 import { Plus, X, RefreshCw } from 'lucide-react'
 
@@ -29,6 +30,7 @@ export default function ReprocessingPage() {
   })
 
   const { profile } = useUser()
+  const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function ReprocessingPage() {
       return
     }
 
-    setSuccess('Reprocessing entry recorded successfully!')
+    setSuccess(t('reprocessing.successMessage'))
     setFormData({
       line_id: formData.line_id,
       product_id: '',
@@ -118,23 +120,23 @@ export default function ReprocessingPage() {
 
   return (
     <div>
-      <Header title="Reprocessing Entry" />
+      <Header title={t('reprocessing.title')} />
 
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <p className="text-gray-600">
-            Record items sent for reprocessing
+            {t('reprocessing.description')}
           </p>
           <Button onClick={() => setShowForm(!showForm)}>
             {showForm ? (
               <>
-                <X className="w-4 h-4 mr-2" />
-                Cancel
+                <X className="w-4 h-4 me-2" />
+                {t('common.cancel')}
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4 mr-2" />
-                New Entry
+                <Plus className="w-4 h-4 me-2" />
+                {t('reprocessing.newEntry')}
               </>
             )}
           </Button>
@@ -142,7 +144,7 @@ export default function ReprocessingPage() {
 
         {showForm && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 className="text-lg font-medium mb-4">New Reprocessing Entry</h3>
+            <h3 className="text-lg font-medium mb-4">{t('reprocessing.newEntry')}</h3>
 
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
@@ -160,7 +162,7 @@ export default function ReprocessingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Production Line *
+                    {t('production.line')} *
                   </label>
                   <select
                     value={formData.line_id}
@@ -168,7 +170,7 @@ export default function ReprocessingPage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select a line</option>
+                    <option value="">{t('production.selectLine')}</option>
                     {lines.map((line) => (
                       <option key={line.id} value={line.id}>
                         {line.name} ({line.code})
@@ -179,7 +181,7 @@ export default function ReprocessingPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Product *
+                    {t('production.product')} *
                   </label>
                   <select
                     value={formData.product_id}
@@ -187,7 +189,7 @@ export default function ReprocessingPage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select a product</option>
+                    <option value="">{t('production.selectProduct')}</option>
                     {products.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.name} ({product.code})
@@ -198,7 +200,7 @@ export default function ReprocessingPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quantity *
+                    {t('production.quantity')} *
                   </label>
                   <div className="flex">
                     <input
@@ -208,10 +210,10 @@ export default function ReprocessingPage() {
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                       required
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter quantity"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-s-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={t('production.enterQuantity')}
                     />
-                    <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 rounded-r-md text-sm">
+                    <span className="inline-flex items-center px-3 py-2 border border-s-0 border-gray-300 bg-gray-50 text-gray-500 rounded-e-md text-sm">
                       {products.find(p => p.id === formData.product_id)?.unit_of_measure || 'units'}
                     </span>
                   </div>
@@ -219,7 +221,7 @@ export default function ReprocessingPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Reprocessing Reason *
+                    {t('reprocessing.reason')} *
                   </label>
                   <select
                     value={formData.reason_id}
@@ -227,7 +229,7 @@ export default function ReprocessingPage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select a reason</option>
+                    <option value="">{t('reprocessing.selectReason')}</option>
                     {reasons.map((reason) => (
                       <option key={reason.id} value={reason.id}>
                         {reason.name}
@@ -236,41 +238,41 @@ export default function ReprocessingPage() {
                   </select>
                   {reasons.length === 0 && (
                     <p className="mt-1 text-xs text-amber-600">
-                      No reprocessing reasons configured. Please add reasons in Admin &gt; Reasons.
+                      {t('reprocessing.noReasonsConfigured')}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Batch Number
+                    {t('production.batchNumber')}
                   </label>
                   <input
                     type="text"
                     value={formData.batch_number}
                     onChange={(e) => setFormData({ ...formData, batch_number: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Optional batch number"
+                    placeholder={t('production.optionalBatch')}
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
+                  {t('production.notes')}
                 </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Optional notes about the reprocessing"
+                  placeholder={t('reprocessing.notesPlaceholder')}
                 />
               </div>
 
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : 'Save Entry'}
+                  {isSubmitting ? t('production.saving') : t('production.saveEntry')}
                 </Button>
               </div>
             </form>
@@ -279,39 +281,39 @@ export default function ReprocessingPage() {
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium">Recent Reprocessing Entries</h3>
+            <h3 className="text-lg font-medium">{t('reprocessing.recentEntries')}</h3>
           </div>
 
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
           ) : entries.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <RefreshCw className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No reprocessing entries yet.</p>
-              <p className="text-sm">Click "New Entry" to record reprocessing.</p>
+              <p>{t('reprocessing.noEntries')}</p>
+              <p className="text-sm">{t('reprocessing.clickToRecord')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date/Time
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.dateTime')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Line
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.line')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.product')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.quantity')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Reason
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('reprocessing.reason')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Recorded By
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.recordedBy')}
                     </th>
                   </tr>
                 </thead>

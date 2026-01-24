@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/shared/lib/utils'
 import { useUser } from '@/features/auth/hooks/useUser'
+import { useTranslation } from '@/shared/i18n'
 import {
   LayoutDashboard,
   Factory,
@@ -15,35 +16,37 @@ import {
   Package,
   List,
   LogOut,
+  Globe,
 } from 'lucide-react'
 import { signOut } from '@/features/auth/services/auth'
 
 interface NavItem {
-  name: string
+  key: string
   href: string
   icon: React.ElementType
   roles?: string[]
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Production', href: '/production', icon: Factory },
-  { name: 'Waste', href: '/waste', icon: Trash2 },
-  { name: 'Damage', href: '/damage', icon: AlertTriangle },
-  { name: 'Reprocessing', href: '/reprocessing', icon: RefreshCw },
+  { key: 'dashboard', href: '/', icon: LayoutDashboard },
+  { key: 'production', href: '/production', icon: Factory },
+  { key: 'waste', href: '/waste', icon: Trash2 },
+  { key: 'damage', href: '/damage', icon: AlertTriangle },
+  { key: 'reprocessing', href: '/reprocessing', icon: RefreshCw },
 ]
 
 const adminNavigation: NavItem[] = [
-  { name: 'Users', href: '/admin/users', icon: Users, roles: ['admin'] },
-  { name: 'Lines', href: '/admin/lines', icon: Factory, roles: ['admin'] },
-  { name: 'Products', href: '/admin/products', icon: Package, roles: ['admin'] },
-  { name: 'Reasons', href: '/admin/reasons', icon: List, roles: ['admin'] },
-  { name: 'Settings', href: '/admin/settings', icon: Settings, roles: ['admin'] },
+  { key: 'users', href: '/admin/users', icon: Users, roles: ['admin'] },
+  { key: 'lines', href: '/admin/lines', icon: Factory, roles: ['admin'] },
+  { key: 'products', href: '/admin/products', icon: Package, roles: ['admin'] },
+  { key: 'reasons', href: '/admin/reasons', icon: List, roles: ['admin'] },
+  { key: 'settings', href: '/admin/settings', icon: Settings, roles: ['admin'] },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const { profile, isLoading } = useUser()
+  const { t, locale, setLocale } = useTranslation()
 
   const isAdmin = profile?.role === 'admin'
 
@@ -51,12 +54,24 @@ export function Sidebar() {
     await signOut()
   }
 
+  const toggleLanguage = () => {
+    setLocale(locale === 'en' ? 'ar' : 'en')
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white w-64">
-      <div className="flex items-center h-16 px-4 border-b border-gray-800">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
         <Link href="/" className="text-xl font-bold">
           ProdLink
         </Link>
+        <button
+          onClick={toggleLanguage}
+          className="flex items-center gap-1 px-2 py-1 text-xs text-gray-300 hover:bg-gray-800 hover:text-white rounded transition-colors"
+          title={locale === 'en' ? 'Switch to Arabic' : 'Switch to English'}
+        >
+          <Globe className="w-4 h-4" />
+          {locale === 'en' ? 'AR' : 'EN'}
+        </button>
       </div>
 
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
@@ -64,7 +79,7 @@ export function Sidebar() {
           const isActive = pathname === item.href
           return (
             <Link
-              key={item.name}
+              key={item.key}
               href={item.href}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors',
@@ -73,8 +88,8 @@ export function Sidebar() {
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               )}
             >
-              <item.icon className="w-5 h-5" />
-              {item.name}
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              <span>{t(`nav.${item.key}`)}</span>
             </Link>
           )
         })}
@@ -83,14 +98,14 @@ export function Sidebar() {
           <>
             <div className="pt-4 pb-2">
               <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Admin
+                {t('nav.admin')}
               </p>
             </div>
             {adminNavigation.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <Link
-                  key={item.name}
+                  key={item.key}
                   href={item.href}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors',
@@ -99,8 +114,8 @@ export function Sidebar() {
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                   )}
                 >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <span>{t(`nav.${item.key}`)}</span>
                 </Link>
               )
             })}
@@ -113,15 +128,15 @@ export function Sidebar() {
           <div className="mb-3">
             <p className="text-sm font-medium truncate">{profile.full_name}</p>
             <p className="text-xs text-gray-400 truncate">{profile.email}</p>
-            <p className="text-xs text-gray-500 capitalize">{profile.role}</p>
+            <p className="text-xs text-gray-500 capitalize">{t(`admin.users.roles.${profile.role}`)}</p>
           </div>
         )}
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors"
         >
-          <LogOut className="w-5 h-5" />
-          Sign out
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <span>{t('auth.signOut')}</span>
         </button>
       </div>
     </div>

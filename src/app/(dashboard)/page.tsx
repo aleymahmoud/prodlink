@@ -1,56 +1,58 @@
 'use client'
 
 import { useUser } from '@/features/auth/hooks/useUser'
+import { useTranslation } from '@/shared/i18n'
 import { Header } from '@/shared/components/layout/Header'
-import { Factory, Trash2, AlertTriangle, RefreshCw, Clock } from 'lucide-react'
+import { Factory, Trash2, RefreshCw, Clock } from 'lucide-react'
 
 export default function DashboardPage() {
   const { profile, isLoading } = useUser()
+  const { t } = useTranslation()
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-500">Loading...</div>
+        <div className="text-gray-500">{t('common.loading')}</div>
       </div>
     )
   }
 
   return (
     <div>
-      <Header title="Dashboard" />
+      <Header title={t('dashboard.title')} />
 
       <div className="p-6">
         <div className="mb-6">
           <h2 className="text-lg font-medium text-gray-900">
-            Welcome back, {profile?.full_name}
+            {t('dashboard.welcomeBack')}, {profile?.full_name}
           </h2>
           <p className="text-sm text-gray-500">
-            Here&apos;s what&apos;s happening today
+            {t('dashboard.todayOverview')}
           </p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Today's Production"
+            title={t('dashboard.todayProduction')}
             value="--"
             icon={Factory}
             color="blue"
           />
           <StatCard
-            title="Pending Approvals"
+            title={t('dashboard.pendingApprovals')}
             value="--"
             icon={Clock}
             color="yellow"
           />
           <StatCard
-            title="Today's Waste"
+            title={t('dashboard.todayWaste')}
             value="--"
             icon={Trash2}
             color="red"
           />
           <StatCard
-            title="Reprocessing"
+            title={t('dashboard.reprocessing')}
             value="--"
             icon={RefreshCw}
             color="green"
@@ -60,11 +62,11 @@ export default function DashboardPage() {
         {/* Recent Activity */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
+            <h3 className="text-lg font-medium text-gray-900">{t('dashboard.recentActivity')}</h3>
           </div>
           <div className="p-6">
             <p className="text-gray-500 text-sm text-center py-8">
-              No recent activity. Start by adding production data.
+              {t('dashboard.noRecentActivity')}
             </p>
           </div>
         </div>
