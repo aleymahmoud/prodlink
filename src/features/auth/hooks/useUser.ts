@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '@/shared/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { User as ProfileUser } from '@/shared/types/database'
@@ -10,6 +10,7 @@ interface UseUserReturn {
   profile: ProfileUser | null
   isLoading: boolean
   error: Error | null
+  refetch: () => Promise<void>
 }
 
 export function useUser(): UseUserReturn {
@@ -17,57 +18,119 @@ export function useUser(): UseUserReturn {
   const [profile, setProfile] = useState<ProfileUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const initialLoadDone = useRef(false)
+  const supabaseRef = useRef(createClient())
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data: profileData, error: profileError } = await supabaseRef.current
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError)
+      return null
+    }
+    return profileData
+  }, [])
+
+  const refetch = useCallback(async () => {
+    const supabase = supabaseRef.current
+
+    try {
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+
+      if (userError) {
+        console.error('Auth error:', userError)
+        setUser(null)
+        setProfile(null)
+        return
+      }
+
+      setUser(currentUser)
+
+      if (currentUser) {
+        const profileData = await fetchProfile(currentUser.id)
+        setProfile(profileData)
+      } else {
+        setProfile(null)
+      }
+    } catch (e) {
+      console.error('Refetch error:', e)
+      setError(e as Error)
+    }
+  }, [fetchProfile])
 
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = supabaseRef.current
+    let mounted = true
 
-    const getUser = async () => {
+    const initialize = async () => {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
 
-        if (userError) throw userError
+        if (!mounted) return
 
-        setUser(user)
+        if (userError) {
+          console.error('Initial auth error:', userError)
+          setError(userError)
+          setIsLoading(false)
+          return
+        }
 
-        if (user) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single()
+        setUser(currentUser)
 
-          if (profileError) throw profileError
-          setProfile(profileData)
+        if (currentUser) {
+          const profileData = await fetchProfile(currentUser.id)
+          if (mounted) {
+            setProfile(profileData)
+          }
         }
       } catch (e) {
-        setError(e as Error)
+        if (mounted) {
+          console.error('Initialize error:', e)
+          setError(e as Error)
+        }
       } finally {
-        setIsLoading(false)
+        if (mounted) {
+          setIsLoading(false)
+          initialLoadDone.current = true
+        }
       }
     }
 
-    getUser()
+    initialize()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null)
+        // Skip if initial load hasn't completed to avoid race conditions
+        if (!initialLoadDone.current) return
+        if (!mounted) return
+
+        console.log('Auth state change:', event)
+
+        if (event === 'SIGNED_OUT') {
+          setUser(null)
+          setProfile(null)
+          return
+        }
 
         if (session?.user) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-
-          setProfile(profileData)
-        } else {
-          setProfile(null)
+          setUser(session.user)
+          const profileData = await fetchProfile(session.user.id)
+          if (mounted) {
+            setProfile(profileData)
+          }
         }
       }
     )
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [fetchProfile])
 
-  return { user, profile, isLoading, error }
+  return { user, profile, isLoading, error, refetch }
 }
