@@ -168,11 +168,13 @@
     },
     "products": {
       "title": "إدارة المنتجات",
-      "description": "إدارة المنتجات",
+      "description": "إدارة كتالوج المنتجات",
       "addProduct": "إضافة منتج",
+      "addManually": "إضافة يدوياً",
       "editProduct": "تعديل المنتج",
       "importCSV": "استيراد CSV",
-      "noProducts": "لم يتم العثور على منتجات. أضف منتجات يدوياً أو استورد من CSV.",
+      "importFromCSV": "استيراد من CSV",
+      "noProducts": "لم يتم العثور على منتجات. أضف منتجات للبدء.",
       "name": "اسم المنتج",
       "code": "رمز المنتج",
       "category": "الفئة",
@@ -183,24 +185,33 @@
       "description": "إدارة أسباب الهدر والتلف وإعادة التصنيع",
       "addReason": "إضافة سبب",
       "editReason": "تعديل السبب",
-      "noReasons": "لم يتم العثور على أسباب. أضف أسباب للهدر أو التلف أو إعادة التصنيع.",
+      "noReasons": "لم يتم العثور على أسباب. أضف أول سبب للبدء.",
       "name": "اسم السبب",
       "nameAr": "الاسم بالعربية",
+      "nameEnglish": "السبب (بالإنجليزية)",
+      "nameArabic": "السبب (بالعربية)",
       "type": "النوع",
       "types": {
         "waste": "هدر",
         "damage": "تلف",
         "reprocessing": "إعادة تصنيع"
-      }
+      },
+      "wasteReasons": "أسباب الهدر",
+      "damageReasons": "أسباب التلف",
+      "reprocessingReasons": "أسباب إعادة التصنيع"
     },
     "settings": {
-      "title": "الإعدادات",
+      "title": "إعدادات النظام",
       "general": "الإعدادات العامة",
       "defaultLanguage": "اللغة الافتراضية",
       "languageDescription": "هذا يحدد اللغة الافتراضية للمستخدمين الجدد",
       "saveSettings": "حفظ الإعدادات",
       "saving": "جاري الحفظ...",
-      "successMessage": "تم حفظ الإعدادات بنجاح!"
+      "successMessage": "تم الحفظ بنجاح!",
+      "approvalWorkflow": "سير عمل الموافقات",
+      "approvalWorkflowNote": "ستتوفر إعدادات سير عمل الموافقات في المرحلة الثالثة.",
+      "databaseConnection": "اتصال قاعدة البيانات",
+      "databaseConnectionNote": "سيتوفر اتصال قاعدة البيانات الخارجية لمزامنة المنتجات في تحديث مستقبلي."
     }
   },
   "languages": {

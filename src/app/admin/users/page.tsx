@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
+import { useTranslation } from '@/shared/i18n'
 import { User, UserRole } from '@/shared/types/database'
 import { Plus, Edit, UserCheck, UserX } from 'lucide-react'
 import { UserModal } from './UserModal'
@@ -14,6 +15,7 @@ export default function UsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
 
+  const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
@@ -81,44 +83,44 @@ export default function UsersPage() {
 
   return (
     <div>
-      <Header title="User Management" />
+      <Header title={t('admin.users.title')} />
 
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <p className="text-gray-600">
-            Manage users and their access to the system
+            {t('admin.users.description')}
           </p>
           <Button onClick={handleCreate}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add User
+            <Plus className="w-4 h-4 me-2" />
+            {t('admin.users.addUser')}
           </Button>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
           ) : users.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              No users found. Add your first user to get started.
+              {t('admin.users.noUsers')}
             </div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.users.user')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.users.role')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('common.status')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.users.created')}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('common.actions')}
                   </th>
                 </tr>
               </thead>
@@ -135,11 +137,11 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${getRoleBadgeColor(
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(
                           user.role
                         )}`}
                       >
-                        {user.role}
+                        {t(`admin.users.roles.${user.role}`)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -150,18 +152,18 @@ export default function UsersPage() {
                             : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {user.is_active ? 'Active' : 'Inactive'}
+                        {user.is_active ? t('common.active') : t('common.inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(user.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleEdit(user)}
                           className="text-blue-600 hover:text-blue-900 p-1"
-                          title="Edit user"
+                          title={t('common.edit')}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -172,7 +174,7 @@ export default function UsersPage() {
                               ? 'text-red-600 hover:text-red-900'
                               : 'text-green-600 hover:text-green-900'
                           }`}
-                          title={user.is_active ? 'Deactivate user' : 'Activate user'}
+                          title={user.is_active ? t('common.inactive') : t('common.active')}
                         >
                           {user.is_active ? (
                             <UserX className="w-4 h-4" />
