@@ -7,8 +7,11 @@ import { useRouter } from 'next/navigation'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [isSignUp, setIsSignUp] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -16,6 +19,7 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+    setSuccess(null)
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -30,6 +34,33 @@ export default function LoginPage() {
 
     router.push('/')
     router.refresh()
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName || email,
+        },
+      },
+    })
+
+    if (error) {
+      setError(error.message)
+      setIsLoading(false)
+      return
+    }
+
+    setSuccess('Account created! You can now sign in.')
+    setIsSignUp(false)
+    setIsLoading(false)
   }
 
   const handleGoogleLogin = async () => {
@@ -68,7 +99,31 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          {success && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={isSignUp ? handleSignUp : handleEmailLogin} className="space-y-4">
+            {isSignUp && (
+              <div>
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+                  Full Name
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  placeholder="Your Name"
+                />
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
@@ -95,6 +150,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
                 disabled={isLoading}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
                 placeholder="••••••••"
@@ -106,9 +162,22 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? (isSignUp ? 'Creating account...' : 'Signing in...') : (isSignUp ? 'Create Account' : 'Sign in')}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => {
+                setIsSignUp(!isSignUp)
+                setError(null)
+                setSuccess(null)
+              }}
+              className="text-sm text-blue-600 hover:text-blue-500"
+            >
+              {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+            </button>
+          </div>
 
           <div className="mt-6">
             <div className="relative">
@@ -149,7 +218,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-500">
-          Contact your administrator if you need access
+          First user becomes admin automatically
         </p>
       </div>
     </div>
