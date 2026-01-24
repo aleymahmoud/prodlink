@@ -42,9 +42,9 @@ A Progressive Web App (PWA) for collecting and managing production data in a pas
 
 All forms share these common fields:
 - **Line** - Selected from user's assigned lines
-- **Product** - From F&O product master (pulled via API/DB)
+- **Product** - From product list (manual entry, file upload, or DB sync)
 - **Quantity**
-- **Unit of Measure** - Comes with product from F&O
+- **Unit of Measure** - Comes with product
 - **Batch/Lot Number** - For traceability
 - **Reason** - From admin-configured list
 - **Notes** - Optional free text
@@ -110,17 +110,28 @@ Records items sent for reprocessing.
 - Mark as finished goods or semi-finished
 - Assign "Form Approved" responsible person per line
 
-### 4.3 Reason Lists
+### 4.3 Product Management
+Admin can populate products using one of these methods:
+- **Manual Entry** - Add/edit products one by one
+- **File Upload** - Import products from CSV or Excel file
+- **Database Connect** - Connect to external database:
+  - Single table connection (select table, map columns)
+  - Custom SQL query (for complex joins/filters)
+  - Sync on-demand or scheduled
+
+Product fields: Name, Code/SKU, Category, Unit of Measure
+
+### 4.4 Reason Lists
 - Configure waste reasons
 - Configure damage reasons
 - Configure reprocessing reasons
 
-### 4.4 Approval Workflow Configuration
+### 4.5 Approval Workflow Configuration
 - Define approval levels for waste
 - Set approvers for each level
 - Configure as sequential or parallel
 
-### 4.5 System Settings
+### 4.6 System Settings
 - Default language (Arabic/English)
 
 ---
@@ -138,7 +149,8 @@ Records items sent for reprocessing.
 - Admin sets default language
 
 ### 5.3 Integration
-- **Pull:** Product master data from Microsoft 365 Finance & Operations (API or DB - TBD)
+- **Product Data:** Multiple options - manual entry, file upload (CSV/Excel), or external database connection
+- **F&O Integration:** Can connect to Microsoft 365 F&O as external database source
 - **Push:** Export/sync to F&O - future enhancement
 
 ### 5.4 Technology Stack
@@ -182,6 +194,7 @@ For the fastest path to a working app:
 1. **Phase 1 - Foundation**
    - User authentication (username/password + Google)
    - Admin panel (users, lines, reasons)
+   - Product management (manual entry, file upload, DB connect)
    - Basic role-based access
 
 2. **Phase 2 - Core Data Entry**
@@ -189,6 +202,7 @@ For the fastest path to a working app:
    - Damage form
    - Reprocessing form
    - Waste form (without approval workflow)
+   - Line-based access control
 
 3. **Phase 3 - Waste Workflow**
    - Approval workflow configuration
@@ -204,7 +218,7 @@ For the fastest path to a working app:
 
 ## 8. Open Questions
 
-1. **F&O Integration:** API or direct database connection for product master?
+1. ~~**F&O Integration:** API or direct database connection for product master?~~ → **Decided: Flexible - manual, upload, or DB connect**
 2. ~~**Hosting:** Cloud provider or on-premise?~~ → **Decided: Vercel + Supabase**
 3. **Branding:** Logo and colors when available?
 
