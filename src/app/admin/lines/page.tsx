@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
+import { useTranslation } from '@/shared/i18n'
 import { Line, LineType } from '@/shared/types/database'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import { LineModal } from './LineModal'
@@ -14,6 +15,7 @@ export default function LinesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingLine, setEditingLine] = useState<Line | null>(null)
 
+  const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
@@ -72,44 +74,44 @@ export default function LinesPage() {
 
   return (
     <div>
-      <Header title="Production Lines" />
+      <Header title={t('admin.lines.title')} />
 
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <p className="text-gray-600">
-            Manage production lines in your factory
+            {t('admin.lines.description')}
           </p>
           <Button onClick={handleCreate}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Line
+            <Plus className="w-4 h-4 me-2" />
+            {t('admin.lines.addLine')}
           </Button>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
           ) : lines.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              No production lines found. Add your first line to get started.
+              {t('admin.lines.noLines')}
             </div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Line
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.lines.name')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Code
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.lines.code')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.lines.type')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('common.status')}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('common.actions')}
                   </th>
                 </tr>
               </thead>
@@ -126,11 +128,11 @@ export default function LinesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${getTypeBadgeColor(
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeBadgeColor(
                           line.type
                         )}`}
                       >
-                        {line.type}
+                        {t(`admin.lines.types.${line.type}`)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -141,15 +143,15 @@ export default function LinesPage() {
                             : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {line.is_active ? 'Active' : 'Inactive'}
+                        {line.is_active ? t('common.active') : t('common.inactive')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleEdit(line)}
                           className="text-blue-600 hover:text-blue-900 p-1"
-                          title="Edit line"
+                          title={t('common.edit')}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -160,7 +162,7 @@ export default function LinesPage() {
                               ? 'text-red-600 hover:text-red-900'
                               : 'text-green-600 hover:text-green-900'
                           }`}
-                          title={line.is_active ? 'Deactivate line' : 'Activate line'}
+                          title={line.is_active ? t('common.inactive') : t('common.active')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

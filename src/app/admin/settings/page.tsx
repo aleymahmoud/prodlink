@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
+import { useTranslation } from '@/shared/i18n'
 import { CheckCircle } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -12,6 +13,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [success, setSuccess] = useState(false)
 
+  const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
@@ -52,9 +54,9 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <div>
-        <Header title="System Settings" />
+        <Header title={t('admin.settings.title')} />
         <div className="p-6">
-          <div className="text-gray-500">Loading...</div>
+          <div className="text-gray-500">{t('common.loading')}</div>
         </div>
       </div>
     )
@@ -62,41 +64,41 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <Header title="System Settings" />
+      <Header title={t('admin.settings.title')} />
 
       <div className="p-6">
         <div className="max-w-2xl">
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">General Settings</h3>
+              <h3 className="text-lg font-medium text-gray-900">{t('admin.settings.general')}</h3>
             </div>
 
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Default Language
+                  {t('admin.settings.defaultLanguage')}
                 </label>
                 <select
                   value={defaultLanguage}
                   onChange={(e) => setDefaultLanguage(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="en">English</option>
-                  <option value="ar">Arabic (العربية)</option>
+                  <option value="en">{t('languages.en')}</option>
+                  <option value="ar">{t('languages.ar')}</option>
                 </select>
                 <p className="mt-1 text-sm text-gray-500">
-                  This sets the default language for new users.
+                  {t('admin.settings.languageDescription')}
                 </p>
               </div>
 
               <div className="flex items-center gap-4">
                 <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Settings'}
+                  {isSaving ? t('admin.settings.saving') : t('admin.settings.saveSettings')}
                 </Button>
                 {success && (
                   <span className="text-green-600 flex items-center gap-1 text-sm">
                     <CheckCircle className="w-4 h-4" />
-                    Saved successfully
+                    {t('admin.settings.successMessage')}
                   </span>
                 )}
               </div>
@@ -105,24 +107,24 @@ export default function SettingsPage() {
 
           <div className="bg-white rounded-lg shadow mt-6">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Approval Workflow</h3>
+              <h3 className="text-lg font-medium text-gray-900">{t('admin.settings.approvalWorkflow')}</h3>
             </div>
 
             <div className="p-6">
               <p className="text-gray-500 text-sm">
-                Approval workflow configuration will be available in Phase 3.
+                {t('admin.settings.approvalWorkflowNote')}
               </p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow mt-6">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Database Connection</h3>
+              <h3 className="text-lg font-medium text-gray-900">{t('admin.settings.databaseConnection')}</h3>
             </div>
 
             <div className="p-6">
               <p className="text-gray-500 text-sm">
-                External database connection for product sync will be available in a future update.
+                {t('admin.settings.databaseConnectionNote')}
               </p>
             </div>
           </div>

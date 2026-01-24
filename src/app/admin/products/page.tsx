@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
+import { useTranslation } from '@/shared/i18n'
 import { Product } from '@/shared/types/database'
 import { Plus, Edit, Trash2, Upload, Database } from 'lucide-react'
 import { ProductModal } from './ProductModal'
@@ -16,6 +17,7 @@ export default function ProductsPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
+  const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
@@ -77,39 +79,39 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <Header title="Product Management" />
+      <Header title={t('admin.products.title')} />
 
       <div className="p-6">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <p className="text-gray-600">
-            Manage your product catalog
+            {t('admin.products.description')}
           </p>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-              <Upload className="w-4 h-4 mr-2" />
-              Import CSV
+              <Upload className="w-4 h-4 me-2" />
+              {t('admin.products.importCSV')}
             </Button>
             <Button onClick={handleCreate}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
+              <Plus className="w-4 h-4 me-2" />
+              {t('admin.products.addProduct')}
             </Button>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
           ) : products.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              <p className="mb-4">No products found. Add products to get started.</p>
+              <p className="mb-4">{t('admin.products.noProducts')}</p>
               <div className="flex justify-center gap-4">
                 <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import from CSV
+                  <Upload className="w-4 h-4 me-2" />
+                  {t('admin.products.importFromCSV')}
                 </Button>
                 <Button onClick={handleCreate}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Manually
+                  <Plus className="w-4 h-4 me-2" />
+                  {t('admin.products.addManually')}
                 </Button>
               </div>
             </div>
@@ -117,23 +119,23 @@ export default function ProductsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.products.name')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Code
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.products.code')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.products.category')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Unit
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('admin.products.unitOfMeasure')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('common.status')}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                  <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('common.actions')}
                   </th>
                 </tr>
               </thead>
@@ -166,15 +168,15 @@ export default function ProductsPage() {
                             : 'bg-red-100 text-red-800'
                         }`}
                       >
-                        {product.is_active ? 'Active' : 'Inactive'}
+                        {product.is_active ? t('common.active') : t('common.inactive')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleEdit(product)}
                           className="text-blue-600 hover:text-blue-900 p-1"
-                          title="Edit product"
+                          title={t('common.edit')}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -185,7 +187,7 @@ export default function ProductsPage() {
                               ? 'text-red-600 hover:text-red-900'
                               : 'text-green-600 hover:text-green-900'
                           }`}
-                          title={product.is_active ? 'Deactivate' : 'Activate'}
+                          title={product.is_active ? t('common.inactive') : t('common.active')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

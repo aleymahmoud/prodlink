@@ -5,6 +5,7 @@ import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
 import { useUser } from '@/features/auth/hooks/useUser'
+import { useTranslation } from '@/shared/i18n'
 import { Line, Product, Reason, WasteEntryWithRelations } from '@/shared/types/database'
 import { Plus, X, Trash2, Clock, CheckCircle, XCircle } from 'lucide-react'
 
@@ -29,6 +30,7 @@ export default function WastePage() {
   })
 
   const { profile } = useUser()
+  const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
@@ -102,7 +104,7 @@ export default function WastePage() {
       return
     }
 
-    setSuccess('Waste entry submitted for approval!')
+    setSuccess(t('waste.successMessage'))
     setFormData({
       line_id: formData.line_id,
       product_id: '',
@@ -125,21 +127,21 @@ export default function WastePage() {
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3" />
-            Approved
+            {t('waste.status.approved')}
           </span>
         )
       case 'rejected':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
             <XCircle className="w-3 h-3" />
-            Rejected
+            {t('waste.status.rejected')}
           </span>
         )
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
             <Clock className="w-3 h-3" />
-            Pending
+            {t('waste.status.pending')}
           </span>
         )
     }
@@ -147,28 +149,28 @@ export default function WastePage() {
 
   return (
     <div>
-      <Header title="Waste Entry" />
+      <Header title={t('waste.title')} />
 
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div>
             <p className="text-gray-600">
-              Record waste items requiring approval
+              {t('waste.description')}
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              Waste entries require multi-level approval before being finalized
+              {t('waste.approvalNote')}
             </p>
           </div>
           <Button onClick={() => setShowForm(!showForm)}>
             {showForm ? (
               <>
-                <X className="w-4 h-4 mr-2" />
-                Cancel
+                <X className="w-4 h-4 me-2" />
+                {t('common.cancel')}
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4 mr-2" />
-                New Entry
+                <Plus className="w-4 h-4 me-2" />
+                {t('waste.newEntry')}
               </>
             )}
           </Button>
@@ -176,7 +178,7 @@ export default function WastePage() {
 
         {showForm && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 className="text-lg font-medium mb-4">New Waste Entry</h3>
+            <h3 className="text-lg font-medium mb-4">{t('waste.newEntry')}</h3>
 
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
@@ -194,7 +196,7 @@ export default function WastePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Production Line *
+                    {t('production.line')} *
                   </label>
                   <select
                     value={formData.line_id}
@@ -202,7 +204,7 @@ export default function WastePage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select a line</option>
+                    <option value="">{t('production.selectLine')}</option>
                     {lines.map((line) => (
                       <option key={line.id} value={line.id}>
                         {line.name} ({line.code})
@@ -213,7 +215,7 @@ export default function WastePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Product *
+                    {t('production.product')} *
                   </label>
                   <select
                     value={formData.product_id}
@@ -221,7 +223,7 @@ export default function WastePage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select a product</option>
+                    <option value="">{t('production.selectProduct')}</option>
                     {products.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.name} ({product.code})
@@ -232,7 +234,7 @@ export default function WastePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quantity *
+                    {t('production.quantity')} *
                   </label>
                   <div className="flex">
                     <input
@@ -242,10 +244,10 @@ export default function WastePage() {
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                       required
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter quantity"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-s-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={t('production.enterQuantity')}
                     />
-                    <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 rounded-r-md text-sm">
+                    <span className="inline-flex items-center px-3 py-2 border border-s-0 border-gray-300 bg-gray-50 text-gray-500 rounded-e-md text-sm">
                       {products.find(p => p.id === formData.product_id)?.unit_of_measure || 'units'}
                     </span>
                   </div>
@@ -253,7 +255,7 @@ export default function WastePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Waste Reason *
+                    {t('waste.reason')} *
                   </label>
                   <select
                     value={formData.reason_id}
@@ -261,7 +263,7 @@ export default function WastePage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select a reason</option>
+                    <option value="">{t('waste.selectReason')}</option>
                     {reasons.map((reason) => (
                       <option key={reason.id} value={reason.id}>
                         {reason.name}
@@ -270,41 +272,41 @@ export default function WastePage() {
                   </select>
                   {reasons.length === 0 && (
                     <p className="mt-1 text-xs text-amber-600">
-                      No waste reasons configured. Please add reasons in Admin &gt; Reasons.
+                      {t('waste.noReasonsConfigured')}
                     </p>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Batch Number
+                    {t('production.batchNumber')}
                   </label>
                   <input
                     type="text"
                     value={formData.batch_number}
                     onChange={(e) => setFormData({ ...formData, batch_number: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Optional batch number"
+                    placeholder={t('production.optionalBatch')}
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes
+                  {t('production.notes')}
                 </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Describe why this waste occurred"
+                  placeholder={t('waste.notesPlaceholder')}
                 />
               </div>
 
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Submit for Approval'}
+                  {isSubmitting ? t('waste.submitting') : t('waste.submitForApproval')}
                 </Button>
               </div>
             </form>
@@ -313,42 +315,42 @@ export default function WastePage() {
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium">Waste Entries</h3>
+            <h3 className="text-lg font-medium">{t('waste.recentEntries')}</h3>
           </div>
 
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
+            <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
           ) : entries.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <Trash2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No waste entries yet.</p>
-              <p className="text-sm">Click "New Entry" to record waste.</p>
+              <p>{t('waste.noEntries')}</p>
+              <p className="text-sm">{t('waste.clickToRecord')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date/Time
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.dateTime')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Line
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.line')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.product')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.quantity')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Reason
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('waste.reason')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('common.status')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Recorded By
+                    <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('production.recordedBy')}
                     </th>
                   </tr>
                 </thead>
