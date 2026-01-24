@@ -55,10 +55,17 @@ export interface ProductionEntry {
   line_id: string
   product_id: string
   quantity: number
+  unit_of_measure: string
   batch_number: string | null
   notes: string | null
   created_by: string
   created_at: string
+}
+
+export interface ProductionEntryWithRelations extends ProductionEntry {
+  lines?: Line
+  products?: Product
+  profiles?: User
 }
 
 export interface WasteEntry {
@@ -66,6 +73,7 @@ export interface WasteEntry {
   line_id: string
   product_id: string
   quantity: number
+  unit_of_measure: string
   batch_number: string | null
   reason_id: string
   notes: string | null
@@ -76,11 +84,19 @@ export interface WasteEntry {
   created_at: string
 }
 
+export interface WasteEntryWithRelations extends WasteEntry {
+  lines?: Line
+  products?: Product
+  reasons?: Reason
+  profiles?: User
+}
+
 export interface DamageEntry {
   id: string
   line_id: string
   product_id: string
   quantity: number
+  unit_of_measure: string
   batch_number: string | null
   reason_id: string
   notes: string | null
@@ -88,16 +104,31 @@ export interface DamageEntry {
   created_at: string
 }
 
+export interface DamageEntryWithRelations extends DamageEntry {
+  lines?: Line
+  products?: Product
+  reasons?: Reason
+  profiles?: User
+}
+
 export interface ReprocessingEntry {
   id: string
   line_id: string
   product_id: string
   quantity: number
+  unit_of_measure: string
   batch_number: string | null
   reason_id: string
   notes: string | null
   created_by: string
   created_at: string
+}
+
+export interface ReprocessingEntryWithRelations extends ReprocessingEntry {
+  lines?: Line
+  products?: Product
+  reasons?: Reason
+  profiles?: User
 }
 
 export interface ApprovalLevel {
