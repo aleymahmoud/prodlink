@@ -141,12 +141,23 @@ Records items sent for reprocessing.
 - **Pull:** Product master data from Microsoft 365 Finance & Operations (API or DB - TBD)
 - **Push:** Export/sync to F&O - future enhancement
 
-### 5.4 Infrastructure
-- No offline capability (requires internet connection)
-- Hosting platform TBD (Docker containerized for portability)
-- Database TBD
+### 5.4 Technology Stack
 
-### 5.5 Browser Support
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Next.js 14+ (React) with TypeScript |
+| **Backend** | Next.js API Routes (serverless) |
+| **Database** | PostgreSQL (via Supabase) |
+| **Authentication** | Supabase Auth (Google + email/password) |
+| **Hosting** | Vercel |
+| **Database Hosting** | Supabase |
+
+### 5.5 Infrastructure
+- No offline capability (requires internet connection)
+- Vercel for frontend and API hosting
+- Supabase for database and authentication
+
+### 5.6 Browser Support
 - Modern browsers (Chrome, Safari, Firefox, Edge)
 - Mobile browsers on iOS and Android
 
@@ -194,7 +205,7 @@ For the fastest path to a working app:
 ## 8. Open Questions
 
 1. **F&O Integration:** API or direct database connection for product master?
-2. **Hosting:** Cloud provider or on-premise?
+2. ~~**Hosting:** Cloud provider or on-premise?~~ → **Decided: Vercel + Supabase**
 3. **Branding:** Logo and colors when available?
 
 ---
