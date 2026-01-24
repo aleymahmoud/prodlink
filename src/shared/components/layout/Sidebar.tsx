@@ -17,6 +17,7 @@ import {
   List,
   LogOut,
   Globe,
+  ClipboardCheck,
 } from 'lucide-react'
 import { signOut } from '@/features/auth/services/auth'
 
@@ -33,6 +34,7 @@ const navigation: NavItem[] = [
   { key: 'waste', href: '/waste', icon: Trash2 },
   { key: 'damage', href: '/damage', icon: AlertTriangle },
   { key: 'reprocessing', href: '/reprocessing', icon: RefreshCw },
+  { key: 'approvals', href: '/approvals', icon: ClipboardCheck, roles: ['admin', 'approver'] },
 ]
 
 const adminNavigation: NavItem[] = [
@@ -75,24 +77,26 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                isActive
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              )}
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              <span>{t(`nav.${item.key}`)}</span>
-            </Link>
-          )
-        })}
+        {navigation
+          .filter((item) => !item.roles || (profile && item.roles.includes(profile.role)))
+          .map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                  isActive
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                )}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <span>{t(`nav.${item.key}`)}</span>
+              </Link>
+            )
+          })}
 
         {isAdmin && (
           <>

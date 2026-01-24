@@ -41,6 +41,7 @@
     "waste": "Waste",
     "damage": "Damage",
     "reprocessing": "Reprocessing",
+    "approvals": "Approvals",
     "admin": "Admin",
     "users": "Users",
     "lines": "Lines",
@@ -212,6 +213,19 @@
       "approvalWorkflowNote": "Approval workflow configuration will be available in Phase 3.",
       "databaseConnection": "Database Connection",
       "databaseConnectionNote": "External database connection for product sync will be available in a future update."
+    }
+  },
+  "approvals": {
+    "title": "Waste Approvals",
+    "description": "Review and approve waste entries submitted by engineers",
+    "approve": "Approve",
+    "reject": "Reject",
+    "noEntries": "No entries found",
+    "filter": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "all": "All"
     }
   },
   "languages": {
