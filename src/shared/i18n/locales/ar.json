@@ -20,7 +20,9 @@
     "close": "إغلاق",
     "noData": "لا توجد بيانات",
     "required": "مطلوب",
-    "optional": "اختياري"
+    "optional": "اختياري",
+    "refresh": "تحديث",
+    "noAccess": "تم رفض الوصول"
   },
   "auth": {
     "signIn": "تسجيل الدخول",
@@ -47,6 +49,7 @@
     "lines": "خطوط الإنتاج",
     "products": "المنتجات",
     "reasons": "الأسباب",
+    "observability": "المراقبة",
     "settings": "الإعدادات"
   },
   "dashboard": {
@@ -213,6 +216,19 @@
       "approvalWorkflowNote": "ستتوفر إعدادات سير عمل الموافقات في المرحلة الثالثة.",
       "databaseConnection": "اتصال قاعدة البيانات",
       "databaseConnectionNote": "سيتوفر اتصال قاعدة البيانات الخارجية لمزامنة المنتجات في تحديث مستقبلي."
+    },
+    "observability": {
+      "title": "المراقبة",
+      "description": "مراقبة عمليات النشر والأخطاء وأداء النظام",
+      "deployments": "عمليات النشر",
+      "errorLogs": "سجل الأخطاء",
+      "recentDeployments": "عمليات النشر الأخيرة",
+      "applicationLogs": "سجلات التطبيق",
+      "noDeployments": "لم يتم العثور على عمليات نشر",
+      "noErrors": "لا توجد أخطاء مسجلة. التطبيق يعمل بسلاسة!",
+      "vercelTokenHint": "تأكد من إعداد VERCEL_TOKEN في متغيرات البيئة.",
+      "showStackTrace": "عرض تتبع المكدس",
+      "showMetadata": "عرض البيانات الوصفية"
     }
   },
   "approvals": {

@@ -18,6 +18,7 @@ import {
   LogOut,
   Globe,
   ClipboardCheck,
+  Activity,
 } from 'lucide-react'
 import { signOut } from '@/features/auth/services/auth'
 
@@ -42,6 +43,7 @@ const adminNavigation: NavItem[] = [
   { key: 'lines', href: '/admin/lines', icon: Factory, roles: ['admin'] },
   { key: 'products', href: '/admin/products', icon: Package, roles: ['admin'] },
   { key: 'reasons', href: '/admin/reasons', icon: List, roles: ['admin'] },
+  { key: 'observability', href: '/admin/observability', icon: Activity, roles: ['admin'] },
   { key: 'settings', href: '/admin/settings', icon: Settings, roles: ['admin'] },
 ]
 
