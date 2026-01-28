@@ -3,7 +3,29 @@
 **Project:** ProdLink - Factory Production Data Collection App
 **Client:** Pastries Factory
 **Date:** 2026-01-24
-**Status:** Pending Approval
+**Status:** In Development
+**Last Updated:** 2026-01-25
+
+---
+
+## Development Progress
+
+| Phase | Status | Progress |
+|-------|--------|----------|
+| Phase 1 - Foundation | ✅ Complete | 100% |
+| Phase 2 - Core Data Entry | ✅ Complete | 100% |
+| Phase 3 - Waste Workflow | 🔄 In Progress | 30% |
+| Phase 4 - Dashboard & Polish | 🔄 Partial | 60% |
+
+**Recent Updates (2026-01-25):**
+- Added `line_id` to products table (products now belong to specific lines)
+- Redesigned Production Entry page with:
+  - Line Type filter (Finished / Semi-Finished)
+  - Production Line dropdown
+  - Products table showing only products for selected line
+  - Inline quantity input with unit of measure dropdown
+  - Batch save functionality for multiple products
+- Updated Admin Products page with line assignment and filtering
 
 ---
 
@@ -191,28 +213,40 @@ Product fields: Name, Code/SKU, Category, Unit of Measure
 
 For the fastest path to a working app:
 
-1. **Phase 1 - Foundation**
-   - User authentication (username/password + Google)
-   - Admin panel (users, lines, reasons)
-   - Product management (manual entry, file upload, DB connect)
-   - Basic role-based access
+### Phase 1 - Foundation ✅ COMPLETE
+- [x] User authentication (username/password + Google via Supabase)
+- [x] Admin panel - Users management
+- [x] Admin panel - Lines management (with type: finished/semi-finished)
+- [x] Admin panel - Reasons management (waste, damage, reprocessing)
+- [x] Product management - Manual entry
+- [x] Product management - CSV file upload
+- [x] Basic role-based access (admin, engineer, approver, viewer)
+- [x] Database schema with RLS policies
 
-2. **Phase 2 - Core Data Entry**
-   - Production form
-   - Damage form
-   - Reprocessing form
-   - Waste form (without approval workflow)
-   - Line-based access control
+### Phase 2 - Core Data Entry ✅ COMPLETE
+- [x] Production form with line/product selection
+- [x] Damage form with reason selection
+- [x] Reprocessing form with reason selection
+- [x] Waste form (with basic approval status)
+- [x] Line-based access control via user_line_assignments
+- [x] **NEW: Products linked to production lines (line_id)**
+- [x] **NEW: Production entry with line type filter**
+- [x] **NEW: Inline quantity entry with unit of measure dropdown**
 
-3. **Phase 3 - Waste Workflow**
-   - Approval workflow configuration
-   - Waste approval process
-   - PDF generator for ISO compliance
+### Phase 3 - Waste Workflow 🔄 IN PROGRESS
+- [x] Basic approval status tracking (pending/approved/rejected)
+- [x] Approvals page for viewing waste entries
+- [ ] Multi-level approval workflow configuration
+- [ ] Sequential/parallel approval support
+- [ ] PDF generator for ISO compliance
+- [ ] Form approval tracking per line
 
-4. **Phase 4 - Dashboard & Polish**
-   - Basic dashboard
-   - Bilingual support
-   - PWA installation
+### Phase 4 - Dashboard & Polish 🔄 PARTIAL
+- [x] Basic dashboard with stats (today's production, pending approvals, waste, reprocessing)
+- [x] Bilingual support (Arabic/English) with language switcher
+- [x] Observability dashboard (Vercel deployments, error logs)
+- [ ] PWA installation manifest
+- [ ] Push notifications for approvers
 
 ---
 

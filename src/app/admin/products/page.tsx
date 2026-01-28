@@ -5,30 +5,43 @@ import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
-import { Product } from '@/shared/types/database'
-import { Plus, Edit, Trash2, Upload, Database } from 'lucide-react'
+import { Line, ProductWithLine } from '@/shared/types/database'
+import { Plus, Edit, Trash2, Upload, Filter } from 'lucide-react'
 import { ProductModal } from './ProductModal'
 import { UploadModal } from './UploadModal'
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductWithLine[]>([])
+  const [lines, setLines] = useState<Line[]>([])
+  const [selectedLineId, setSelectedLineId] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [editingProduct, setEditingProduct] = useState<ProductWithLine | null>(null)
 
   const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
+    fetchLines()
     fetchProducts()
   }, [])
+
+  const fetchLines = async () => {
+    const { data } = await supabase
+      .from('lines')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (data) setLines(data)
+  }
 
   const fetchProducts = async () => {
     setIsLoading(true)
     const { data, error } = await supabase
       .from('products')
-      .select('*')
+      .select('*, lines(*)')
       .order('name')
 
     if (!error && data) {
@@ -37,7 +50,7 @@ export default function ProductsPage() {
     setIsLoading(false)
   }
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = (product: ProductWithLine) => {
     setEditingProduct(product)
     setIsModalOpen(true)
   }
@@ -66,7 +79,7 @@ export default function ProductsPage() {
     handleUploadModalClose()
   }
 
-  const toggleProductStatus = async (product: Product) => {
+  const toggleProductStatus = async (product: ProductWithLine) => {
     const { error } = await supabase
       .from('products')
       .update({ is_active: !product.is_active })
@@ -76,6 +89,10 @@ export default function ProductsPage() {
       fetchProducts()
     }
   }
+
+  const filteredProducts = selectedLineId
+    ? products.filter(p => p.line_id === selectedLineId)
+    : products
 
   return (
     <div>
@@ -98,12 +115,41 @@ export default function ProductsPage() {
           </div>
         </div>
 
+        {/* Filter by Line */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Filter className="w-5 h-5 text-gray-400" />
+            <div className="flex-1 max-w-xs">
+              <select
+                value={selectedLineId}
+                onChange={(e) => setSelectedLineId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Production Lines</option>
+                {lines.map((line) => (
+                  <option key={line.id} value={line.id}>
+                    {line.name} ({line.code}) - {line.type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedLineId && (
+              <button
+                onClick={() => setSelectedLineId('')}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {isLoading ? (
             <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
-          ) : products.length === 0 ? (
+          ) : filteredProducts.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              <p className="mb-4">{t('admin.products.noProducts')}</p>
+              <p className="mb-4">{selectedLineId ? 'No products for this line' : t('admin.products.noProducts')}</p>
               <div className="flex justify-center gap-4">
                 <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
                   <Upload className="w-4 h-4 me-2" />
@@ -126,6 +172,9 @@ export default function ProductsPage() {
                     {t('admin.products.code')}
                   </th>
                   <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Production Line
+                  </th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('admin.products.category')}
                   </th>
                   <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -140,7 +189,7 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -149,6 +198,20 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{product.code}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {product.lines ? (
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {product.lines.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {product.lines.type}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">Not assigned</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">

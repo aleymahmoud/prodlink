@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sidebar } from './Sidebar'
-import { X } from 'lucide-react'
+import { X, Menu } from 'lucide-react'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -10,6 +10,21 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Load collapsed state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed')
+    if (saved !== null) {
+      setSidebarCollapsed(saved === 'true')
+    }
+  }, [])
+
+  const toggleCollapsed = () => {
+    const newValue = !sidebarCollapsed
+    setSidebarCollapsed(newValue)
+    localStorage.setItem('sidebar-collapsed', String(newValue))
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -37,12 +52,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:start-0 lg:flex lg:w-64">
-        <Sidebar />
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:start-0 lg:flex transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'
+      }`}>
+        <Sidebar collapsed={sidebarCollapsed} onToggle={toggleCollapsed} />
       </div>
 
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="fixed top-4 start-4 z-30 p-2 bg-gray-900 text-white rounded-md lg:hidden"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
       {/* Main content */}
-      <div className="lg:ps-64">
+      <div className={`transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:ps-16' : 'lg:ps-64'
+      }`}>
         <main className="min-h-screen">{children}</main>
       </div>
     </div>

@@ -36,9 +36,14 @@ export interface Product {
   code: string
   category: string | null
   unit_of_measure: string
+  line_id: string | null
   is_active: boolean
   created_at: string
   updated_at: string
+}
+
+export interface ProductWithLine extends Product {
+  lines?: Line
 }
 
 export interface Reason {

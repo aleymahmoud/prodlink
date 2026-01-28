@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
-import { Product } from '@/shared/types/database'
+import { Product, Line } from '@/shared/types/database'
 import { X } from 'lucide-react'
 
 interface ProductModalProps {
@@ -17,11 +17,27 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
   const [code, setCode] = useState(product?.code || '')
   const [category, setCategory] = useState(product?.category || '')
   const [unitOfMeasure, setUnitOfMeasure] = useState(product?.unit_of_measure || 'unit')
+  const [lineId, setLineId] = useState(product?.line_id || '')
+  const [lines, setLines] = useState<Line[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const supabase = createClient()
   const isEditing = !!product
+
+  useEffect(() => {
+    fetchLines()
+  }, [])
+
+  const fetchLines = async () => {
+    const { data } = await supabase
+      .from('lines')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (data) setLines(data)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +53,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
             code,
             category: category || null,
             unit_of_measure: unitOfMeasure,
+            line_id: lineId || null,
           })
           .eq('id', product.id)
 
@@ -49,6 +66,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
             code,
             category: category || null,
             unit_of_measure: unitOfMeasure,
+            line_id: lineId || null,
           })
 
         if (insertError) throw insertError
@@ -95,7 +113,26 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Product Name
+                    Production Line *
+                  </label>
+                  <select
+                    value={lineId}
+                    onChange={(e) => setLineId(e.target.value)}
+                    required
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select a production line</option>
+                    {lines.map((line) => (
+                      <option key={line.id} value={line.id}>
+                        {line.name} ({line.code}) - {line.type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Product Name *
                   </label>
                   <input
                     type="text"
@@ -109,7 +146,7 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Product Code / SKU
+                    Product Code / SKU *
                   </label>
                   <input
                     type="text"
