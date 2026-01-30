@@ -145,6 +145,14 @@
     "successMessage": "Reprocessing entry recorded successfully!"
   },
   "admin": {
+    "tabs": {
+      "general": "General",
+      "users": "Users",
+      "lines": "Lines",
+      "products": "Products",
+      "reasons": "Reasons",
+      "observability": "Observability"
+    },
     "users": {
       "title": "User Management",
       "description": "Manage users and their access to the system",

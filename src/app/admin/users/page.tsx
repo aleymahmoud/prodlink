@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
@@ -82,9 +81,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div>
-      <Header title={t('admin.users.title')} />
-
+    <>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <p className="text-gray-600">
@@ -199,6 +196,6 @@ export default function UsersPage() {
           onSave={handleSave}
         />
       )}
-    </div>
+    </>
   )
 }

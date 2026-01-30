@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
@@ -79,9 +78,7 @@ export default function ReasonsPage() {
   ]
 
   return (
-    <div>
-      <Header title={t('admin.reasons.title')} />
-
+    <>
       <div className="p-6">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <p className="text-gray-600">
@@ -201,6 +198,6 @@ export default function ReasonsPage() {
           onSave={handleSave}
         />
       )}
-    </div>
+    </>
   )
 }
