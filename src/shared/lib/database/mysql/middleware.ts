@@ -31,7 +31,8 @@ export async function updateMySQLSession(request: NextRequest) {
   const isCallbackRoute = request.nextUrl.pathname.startsWith('/callback')
   const isMigrateRoute = request.nextUrl.pathname.startsWith('/api/db-migrate')
   const isDbStatusRoute = request.nextUrl.pathname.startsWith('/api/db-status')
-  const isPublicRoute = isAuthRoute || isCallbackRoute || isMigrateRoute || isDbStatusRoute
+  const isDbSetupRoute = request.nextUrl.pathname.startsWith('/api/db-setup')
+  const isPublicRoute = isAuthRoute || isCallbackRoute || isMigrateRoute || isDbStatusRoute || isDbSetupRoute
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
