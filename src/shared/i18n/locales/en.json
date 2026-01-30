@@ -226,7 +226,10 @@
       "approvalWorkflow": "Approval Workflow",
       "approvalWorkflowNote": "Approval workflow configuration will be available in Phase 3.",
       "databaseConnection": "Database Connection",
-      "databaseConnectionNote": "External database connection for product sync will be available in a future update."
+      "databaseConnectionNote": "External database connection for product sync will be available in a future update.",
+      "connected": "Connected",
+      "connectionError": "Connection Error",
+      "databaseProviderNote": "Database provider is configured via environment variable. Change requires app restart."
     },
     "observability": {
       "title": "Observability",

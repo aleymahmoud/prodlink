@@ -1,7 +1,14 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/shared/lib/supabase/middleware'
+import { updateMySQLSession } from '@/shared/lib/database/mysql/middleware'
 
 export async function middleware(request: NextRequest) {
+  const provider = process.env.DATABASE_PROVIDER || 'supabase'
+
+  if (provider === 'mysql') {
+    return await updateMySQLSession(request)
+  }
+
   return await updateSession(request)
 }
 

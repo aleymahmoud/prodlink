@@ -5,20 +5,36 @@ import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Database, Cloud } from 'lucide-react'
 
 export default function SettingsPage() {
   const [defaultLanguage, setDefaultLanguage] = useState('en')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [dbProvider, setDbProvider] = useState<string>('supabase')
+  const [dbStatus, setDbStatus] = useState<'connected' | 'error' | 'checking'>('checking')
 
   const { t } = useTranslation()
   const supabase = createClient()
 
   useEffect(() => {
     fetchSettings()
+    checkDatabaseStatus()
   }, [])
+
+  const checkDatabaseStatus = async () => {
+    setDbStatus('checking')
+    try {
+      // Check which provider is configured via API
+      const response = await fetch('/api/db-status')
+      const data = await response.json()
+      setDbProvider(data.provider || 'supabase')
+      setDbStatus(data.connected ? 'connected' : 'error')
+    } catch {
+      setDbStatus('error')
+    }
+  }
 
   const fetchSettings = async () => {
     setIsLoading(true)
@@ -122,10 +138,55 @@ export default function SettingsPage() {
               <h3 className="text-lg font-medium text-gray-900">{t('admin.settings.databaseConnection')}</h3>
             </div>
 
-            <div className="p-6">
-              <p className="text-gray-500 text-sm">
-                {t('admin.settings.databaseConnectionNote')}
-              </p>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-lg ${dbProvider === 'mysql' ? 'bg-blue-100' : 'bg-green-100'}`}>
+                  {dbProvider === 'mysql' ? (
+                    <Database className={`w-6 h-6 ${dbProvider === 'mysql' ? 'text-blue-600' : 'text-green-600'}`} />
+                  ) : (
+                    <Cloud className="w-6 h-6 text-green-600" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {dbProvider === 'mysql' ? 'MySQL Database' : 'Supabase (PostgreSQL)'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {dbProvider === 'mysql'
+                      ? `${process.env.NEXT_PUBLIC_MYSQL_HOST || 'MySQL Server'}`
+                      : 'Cloud-hosted PostgreSQL with authentication'
+                    }
+                  </p>
+                </div>
+                <div className="ms-auto">
+                  {dbStatus === 'checking' && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {t('common.loading')}
+                    </span>
+                  )}
+                  {dbStatus === 'connected' && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="w-2 h-2 bg-green-500 rounded-full me-1.5"></span>
+                      {t('admin.settings.connected')}
+                    </span>
+                  )}
+                  {dbStatus === 'error' && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <span className="w-2 h-2 bg-red-500 rounded-full me-1.5"></span>
+                      {t('admin.settings.connectionError')}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500">
+                  {t('admin.settings.databaseProviderNote')}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  DATABASE_PROVIDER={dbProvider}
+                </p>
+              </div>
             </div>
           </div>
         </div>
