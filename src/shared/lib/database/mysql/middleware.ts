@@ -32,7 +32,8 @@ export async function updateMySQLSession(request: NextRequest) {
   const isMigrateRoute = request.nextUrl.pathname.startsWith('/api/db-migrate')
   const isDbStatusRoute = request.nextUrl.pathname.startsWith('/api/db-status')
   const isDbSetupRoute = request.nextUrl.pathname.startsWith('/api/db-setup')
-  const isPublicRoute = isAuthRoute || isCallbackRoute || isMigrateRoute || isDbStatusRoute || isDbSetupRoute
+  const isDbDebugRoute = request.nextUrl.pathname.startsWith('/api/db-debug')
+  const isPublicRoute = isAuthRoute || isCallbackRoute || isMigrateRoute || isDbStatusRoute || isDbSetupRoute || isDbDebugRoute
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
