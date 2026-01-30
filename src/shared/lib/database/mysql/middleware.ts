@@ -29,7 +29,9 @@ export async function updateMySQLSession(request: NextRequest) {
   // Protected routes - redirect to login if not authenticated
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
   const isCallbackRoute = request.nextUrl.pathname.startsWith('/callback')
-  const isPublicRoute = isAuthRoute || isCallbackRoute
+  const isMigrateRoute = request.nextUrl.pathname.startsWith('/api/db-migrate')
+  const isDbStatusRoute = request.nextUrl.pathname.startsWith('/api/db-status')
+  const isPublicRoute = isAuthRoute || isCallbackRoute || isMigrateRoute || isDbStatusRoute
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
