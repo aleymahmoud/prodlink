@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server'
 
+function maskUrl(url: string | undefined): string {
+  if (!url) return 'NOT SET'
+  // Mask password in URL like mysql://user:password@host:port/db
+  return url.replace(/:([^:@]+)@/, ':***@')
+}
+
 export async function GET() {
   const provider = process.env.DATABASE_PROVIDER || 'supabase'
 
@@ -8,6 +14,14 @@ export async function GET() {
   const maskedPassword = password
     ? `${password.substring(0, 3)}...${password.substring(password.length - 3)} (${password.length} chars)`
     : 'NOT SET'
+
+  // Check for common database URL environment variables (Cranl might set these)
+  const urlVariables = {
+    DATABASE_URL: maskUrl(process.env.DATABASE_URL),
+    MYSQL_URL: maskUrl(process.env.MYSQL_URL),
+    MYSQL_DATABASE_URL: maskUrl(process.env.MYSQL_DATABASE_URL),
+    DB_URL: maskUrl(process.env.DB_URL),
+  }
 
   const config = {
     DATABASE_PROVIDER: provider,
@@ -23,13 +37,11 @@ export async function GET() {
   if (provider === 'mysql') {
     try {
       const mysql = await import('mysql2/promise')
+      const { getMySQLConfig } = await import('@/shared/lib/database/mysql/client')
 
+      const config = getMySQLConfig()
       const connection = await mysql.createConnection({
-        host: process.env.MYSQL_HOST,
-        port: parseInt(process.env.MYSQL_PORT || '3306', 10),
-        user: process.env.MYSQL_USER,
-        password: process.env.MYSQL_PASSWORD,
-        database: process.env.MYSQL_DATABASE,
+        ...config,
         connectTimeout: 10000,
       })
 
@@ -57,6 +69,7 @@ export async function GET() {
 
   return NextResponse.json({
     config,
+    urlVariables,
     connectionTest,
     timestamp: new Date().toISOString()
   }, { status: 200 })
