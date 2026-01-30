@@ -1,19 +1,26 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Admin client with service role for user management
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+// Lazy initialization for admin client to avoid build-time errors
+let supabaseAdmin: SupabaseClient | null = null
+
+function getSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdmin) {
+    supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    )
   }
-)
+  return supabaseAdmin
+}
 
 // Check if current user is admin
 async function isAdmin(request: NextRequest): Promise<boolean> {
@@ -58,7 +65,7 @@ export async function POST(request: NextRequest) {
     const { email, password, fullName, role, lineIds } = await request.json()
 
     // Create user using admin API (doesn't sign them in)
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authData, error: authError } = await getSupabaseAdmin().auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirm email
@@ -79,7 +86,7 @@ export async function POST(request: NextRequest) {
     // Wait a moment for the trigger to execute
     await new Promise(resolve => setTimeout(resolve, 500))
 
-    const { error: profileError } = await supabaseAdmin
+    const { error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ role: role, full_name: fullName })
       .eq('id', authData.user.id)
@@ -95,7 +102,7 @@ export async function POST(request: NextRequest) {
         line_id: lineId,
       }))
 
-      const { error: assignError } = await supabaseAdmin
+      const { error: assignError } = await getSupabaseAdmin()
         .from('user_line_assignments')
         .insert(assignments)
 
