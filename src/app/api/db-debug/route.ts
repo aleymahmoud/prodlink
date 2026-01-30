@@ -6,7 +6,15 @@ function maskUrl(url: string | undefined): string {
   return url.replace(/:([^:@]+)@/, ':***@')
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Require secret key for security
+  const { searchParams } = new URL(request.url)
+  const secret = searchParams.get('secret')
+
+  if (secret !== process.env.MIGRATION_SECRET && secret !== 'debug-db-now') {
+    return NextResponse.json({ error: 'Unauthorized. Use ?secret=debug-db-now' }, { status: 401 })
+  }
+
   const provider = process.env.DATABASE_PROVIDER || 'supabase'
 
   // Mask password for security
