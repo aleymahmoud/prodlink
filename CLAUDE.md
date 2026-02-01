@@ -1,176 +1,85 @@
-# CLAUDE.md - AI Assistant Guide for ProdLink
+# CLAUDE.md
 
-This document provides guidance for AI assistants working with the ProdLink codebase.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-**ProdLink** is a new project repository. This CLAUDE.md serves as a foundational guide that should be updated as the project evolves.
+ProdLink is a factory production data collection PWA for a pastries factory. It tracks production output, waste (with approval workflows), damage, and reprocessing entries across ~20 production lines. Built with Next.js 14, Supabase (auth + PostgreSQL), and Tailwind CSS.
 
-**Repository:** aleymahmoud/prodlink
-**Status:** Initial setup
-
-## Repository Structure
-
-```
-prodlink/
-├── CLAUDE.md          # This file - AI assistant guidelines
-└── (project files to be added)
-```
-
-> **Note:** Update this section as the project structure develops.
-
-## Development Environment
-
-### Prerequisites
-
-- To be defined based on project technology stack
-
-### Setup
+## Commands
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd prodlink
-
-# Additional setup steps to be added
+npm run dev      # Start development server (localhost:3000)
+npm run build    # Production build
+npm run lint     # ESLint
 ```
 
-## Development Workflows
+## Architecture
 
-### Branching Strategy
-
-- `main` - Production-ready code
-- `develop` - Integration branch for features (if applicable)
-- `feature/*` - Feature branches
-- `bugfix/*` - Bug fix branches
-- `claude/*` - AI assistant work branches
-
-### Commit Guidelines
-
-Follow conventional commit format:
+### Directory Structure
 
 ```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
+src/
+├── app/                    # Next.js App Router
+│   ├── (auth)/            # Auth routes (login, callback)
+│   ├── (dashboard)/       # Main app routes with DashboardLayout
+│   ├── admin/             # Admin panel (users, lines, products, reasons, settings)
+│   └── api/               # API routes
+├── features/              # Feature modules
+│   └── auth/              # Auth services and hooks
+└── shared/
+    ├── components/        # Shared UI components
+    ├── i18n/              # Internationalization (en/ar)
+    ├── lib/               # Utilities
+    │   └── supabase/      # Supabase client configuration
+    └── types/             # TypeScript types
 ```
 
-**Types:**
-- `feat` - New feature
-- `fix` - Bug fix
-- `docs` - Documentation changes
-- `style` - Code style changes (formatting, etc.)
-- `refactor` - Code refactoring
-- `test` - Adding or updating tests
-- `chore` - Maintenance tasks
+### Key Patterns
 
-### Pull Request Process
+**Supabase Client Usage:**
+- Server components: `import { createClient } from '@/shared/lib/supabase/server'` (async)
+- Client components: `import { createClient } from '@/shared/lib/supabase/client'`
 
-1. Create a feature/bugfix branch from the appropriate base
-2. Make changes with clear, atomic commits
-3. Ensure all tests pass (when tests exist)
-4. Create a PR with a clear description
-5. Address review feedback
+**Authentication:**
+- Middleware (`src/middleware.ts`) handles session refresh via `updateSession()`
+- `useUser()` hook provides `user`, `profile`, and `isLoading` state
+- First user to sign up automatically becomes admin
 
-## Code Conventions
+**Internationalization:**
+- Use `useTranslation()` hook to get `t()` function and `locale`
+- Translations in `src/shared/i18n/locales/{en,ar}.json`
+- RTL support handled automatically based on locale
 
-### General Principles
+**Data Entry Pages:**
+- Dashboard routes use `DashboardLayout` wrapper
+- Entry forms (production, waste, damage, reprocessing) follow consistent patterns
+- Products are linked to production lines via `line_id`
 
-1. **Simplicity** - Keep solutions simple and focused
-2. **Readability** - Write clear, self-documenting code
-3. **Consistency** - Follow established patterns in the codebase
-4. **Security** - Never introduce vulnerabilities (see Security section)
+### Database Schema
 
-### Style Guidelines
+Core tables in Supabase with RLS policies:
+- `profiles` - User accounts (extends auth.users)
+- `lines` - Production lines (type: finished/semi-finished)
+- `products` - Products linked to lines
+- `user_line_assignments` - Maps users to their accessible lines
+- `production_entries`, `waste_entries`, `damage_entries`, `reprocessing_entries`
+- `reasons` - Configurable reasons by type (waste/damage/reprocessing)
+- `approval_levels`, `waste_approvals` - Waste approval workflow
 
-> **Note:** Update this section with language-specific style guides as the project develops.
+Migrations in `supabase/migrations/`. The first user trigger creates an admin profile.
 
-## Testing
+### User Roles
 
-### Running Tests
+- `admin` - Full access, system configuration
+- `engineer` - Data entry for assigned lines only
+- `approver` - View and approve waste entries
+- `viewer` - Read-only dashboard access
 
-```bash
-# Add test commands as project develops
+## Environment Variables
+
+Required in `.env.local`:
 ```
-
-### Writing Tests
-
-- Write tests for new functionality
-- Maintain existing test coverage
-- Follow testing patterns established in the codebase
-
-## AI Assistant Guidelines
-
-### Before Making Changes
-
-1. **Read before modifying** - Always read files before suggesting changes
-2. **Understand context** - Explore related files to understand patterns
-3. **Check existing patterns** - Follow conventions already in the codebase
-
-### When Implementing Features
-
-1. Use the TodoWrite tool to plan and track tasks
-2. Make minimal, focused changes
-3. Avoid over-engineering
-4. Don't add features beyond what was requested
-
-### Code Quality
-
-- Don't add unnecessary comments or documentation
-- Don't refactor unrelated code
-- Keep changes atomic and reviewable
-
-### Security
-
-Never introduce:
-- Command injection vulnerabilities
-- XSS vulnerabilities
-- SQL injection
-- Hardcoded secrets or credentials
-- Other OWASP Top 10 vulnerabilities
-
-### Git Operations
-
-- Use clear, descriptive commit messages
-- Never force push to shared branches
-- Always verify changes before committing
-
-## Common Tasks
-
-### Adding a New Feature
-
-1. Understand the requirements
-2. Explore relevant existing code
-3. Plan the implementation
-4. Implement with minimal changes
-5. Add tests if applicable
-6. Commit with clear message
-
-### Fixing a Bug
-
-1. Reproduce and understand the bug
-2. Find the root cause
-3. Implement the minimal fix
-4. Verify the fix
-5. Commit with reference to issue if applicable
-
-### Updating Documentation
-
-- Keep documentation concise and accurate
-- Update as code changes
-- Don't add unnecessary documentation
-
-## Project-Specific Notes
-
-> Add project-specific information here as the project develops, such as:
-> - API endpoints
-> - Database schema
-> - External service integrations
-> - Environment variables
-> - Deployment procedures
-
----
-
-*This CLAUDE.md should be updated as the project evolves. Add new sections as needed and remove placeholder content when actual project details are available.*
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
