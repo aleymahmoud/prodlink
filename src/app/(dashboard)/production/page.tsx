@@ -7,7 +7,7 @@ import { createClient } from '@/shared/lib/supabase/client'
 import { useUser } from '@/features/auth/hooks/useUser'
 import { useTranslation } from '@/shared/i18n'
 import { Line, ProductWithLine, ProductionEntryWithRelations, LineType } from '@/shared/types/database'
-import { Factory, Filter, Save, History, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Factory, Filter, Save, History, Search, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, Package } from 'lucide-react'
 
 interface ProductEntry {
   product_id: string
@@ -188,7 +188,7 @@ export default function ProductionPage() {
   }
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 text-gray-400" />
+    if (sortField !== field) return <ArrowUpDown className="w-4 h-4 text-slate-400" />
     return sortDirection === 'asc'
       ? <ArrowUp className="w-4 h-4 text-blue-600" />
       : <ArrowDown className="w-4 h-4 text-blue-600" />
@@ -268,100 +268,130 @@ export default function ProductionPage() {
 
   return (
     <div>
-      <Header title={t('production.title')} />
-
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-          <p className="text-gray-600">
-            {t('production.description')}
-          </p>
+      <Header
+        title={t('production.title')}
+        subtitle={t('production.description')}
+        icon={
+          <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg shadow-emerald-500/20">
+            <Factory className="w-5 h-5 text-white" />
+          </div>
+        }
+        actions={
           <Button
             variant={showHistory ? 'primary' : 'outline'}
             onClick={() => setShowHistory(!showHistory)}
+            className="rounded-xl"
           >
             <History className="w-4 h-4 me-2" />
             {showHistory ? 'Hide History' : 'Show History'}
           </Button>
-        </div>
+        }
+      />
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <span className="font-medium text-gray-700">Filter Production Line</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Line Type
-              </label>
-              <select
-                value={selectedLineType}
-                onChange={(e) => {
-                  setSelectedLineType(e.target.value as LineType | '')
-                  setSelectedLineId('')
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">All Types</option>
-                <option value="finished">Finished</option>
-                <option value="semi-finished">Semi-Finished</option>
-              </select>
+      <div className="p-6 space-y-6">
+        {/* Filters Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl shadow-sm">
+                <Filter className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Filter Production Line</h3>
+                <p className="text-sm text-slate-500">Select a line to record production</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Production Line *
-              </label>
-              <select
-                value={selectedLineId}
-                onChange={(e) => setSelectedLineId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select a production line</option>
-                {filteredLines.map((line) => (
-                  <option key={line.id} value={line.id}>
-                    {line.name} ({line.code})
-                  </option>
-                ))}
-              </select>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  Line Type
+                </label>
+                <select
+                  value={selectedLineType}
+                  onChange={(e) => {
+                    setSelectedLineType(e.target.value as LineType | '')
+                    setSelectedLineId('')
+                  }}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:bg-slate-100"
+                >
+                  <option value="">All Types</option>
+                  <option value="finished">Finished</option>
+                  <option value="semi-finished">Semi-Finished</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  Production Line *
+                </label>
+                <select
+                  value={selectedLineId}
+                  onChange={(e) => setSelectedLineId(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:bg-slate-100"
+                >
+                  <option value="">Select a production line</option>
+                  {filteredLines.map((line) => (
+                    <option key={line.id} value={line.id}>
+                      {line.name} ({line.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-3">
+            <div className="p-1 bg-red-100 rounded-lg">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
+          <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm flex items-center gap-3">
+            <div className="p-1 bg-emerald-100 rounded-lg">
+              <CheckCircle className="w-4 h-4" />
+            </div>
             {success}
           </div>
         )}
 
         {/* Products Table */}
         {selectedLineId ? (
-          <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
               <div className="flex flex-wrap justify-between items-center gap-4">
-                <h3 className="text-lg font-medium">
-                  Products for {lines.find(l => l.id === selectedLineId)?.name}
-                </h3>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl shadow-sm">
+                    <Package className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      Products for {lines.find(l => l.id === selectedLineId)?.name}
+                    </h3>
+                    <p className="text-sm text-slate-500">{filteredAndSortedProducts.length} products available</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
                   {/* Product Search */}
                   <div className="relative">
-                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
                       value={productSearch}
                       onChange={(e) => setProductSearch(e.target.value)}
-                      placeholder="Search by name or code..."
-                      className="ps-9 pe-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 w-64"
+                      placeholder="Search products..."
+                      className="ps-10 pe-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-64"
                     />
                   </div>
                   {hasEntries && (
-                    <Button onClick={handleSubmit} disabled={isSubmitting}>
+                    <Button onClick={handleSubmit} disabled={isSubmitting} className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20">
                       <Save className="w-4 h-4 me-2" />
                       {isSubmitting ? 'Saving...' : 'Save Entries'}
                     </Button>
@@ -371,80 +401,89 @@ export default function ProductionPage() {
             </div>
 
             {isLoading ? (
-              <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
+              <div className="p-8 text-center">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-slate-500 font-medium">{t('common.loading')}</span>
+                </div>
+              </div>
             ) : filteredAndSortedProducts.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Factory className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <div className="p-12 text-center">
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                  <Factory className="w-8 h-8 text-slate-400" />
+                </div>
                 {productSearch ? (
-                  <p>No products match your search</p>
+                  <p className="text-slate-600 font-medium">No products match your search</p>
                 ) : (
                   <>
-                    <p>No products assigned to this line</p>
-                    <p className="text-sm mt-2">Go to Admin → Products to assign products to this line</p>
+                    <p className="text-slate-600 font-medium">No products assigned to this line</p>
+                    <p className="text-sm text-slate-500 mt-2">Go to Settings → Products to assign products</p>
                   </>
                 )}
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50/80">
                     <tr>
                       <th
-                        className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                         onClick={() => handleSort('code')}
                       >
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           Code
                           <SortIcon field="code" />
                         </div>
                       </th>
                       <th
-                        className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                         onClick={() => handleSort('name')}
                       >
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           Product
                           <SortIcon field="name" />
                         </div>
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                      <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider w-40">
                         Quantity
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                      <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider w-36">
                         Unit
                       </th>
                       <th
-                        className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                         onClick={() => handleSort('userToday')}
                       >
-                        <div className="flex items-center gap-1">
-                          My Total Today
+                        <div className="flex items-center gap-2">
+                          My Total
                           <SortIcon field="userToday" />
                         </div>
                       </th>
                       <th
-                        className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                         onClick={() => handleSort('globalToday')}
                       >
-                        <div className="flex items-center gap-1">
-                          All Users Today
+                        <div className="flex items-center gap-2">
+                          All Users
                           <SortIcon field="globalToday" />
                         </div>
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-slate-100">
                     {filteredAndSortedProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50">
+                      <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-mono text-gray-900">{product.code}</div>
+                          <span className="inline-flex px-2.5 py-1 text-xs font-mono font-medium bg-slate-100 text-slate-700 rounded-lg">
+                            {product.code}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-slate-900">
                             {product.name}
                           </div>
                           {product.category && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-slate-500 mt-0.5">
                               {product.category}
                             </div>
                           )}
@@ -457,14 +496,14 @@ export default function ProductionPage() {
                             value={productEntries[product.id]?.quantity || ''}
                             onChange={(e) => handleQuantityChange(product.id, e.target.value, product.unit_of_measure)}
                             placeholder="0"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <select
                             value={productEntries[product.id]?.unit_of_measure || product.unit_of_measure}
                             onChange={(e) => handleUnitChange(product.id, e.target.value, product.unit_of_measure)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                           >
                             {UNIT_OPTIONS.map(option => (
                               <option key={option.value} value={option.value}>
@@ -474,17 +513,21 @@ export default function ProductionPage() {
                           </select>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-blue-600">
-                            {productTotals[product.id]?.userToday || 0}
-                            <span className="text-xs text-gray-500 ms-1">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-lg">
+                            <span className="text-sm font-bold text-blue-600">
+                              {productTotals[product.id]?.userToday || 0}
+                            </span>
+                            <span className="text-xs text-blue-500">
                               {product.unit_of_measure}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-green-600">
-                            {productTotals[product.id]?.globalToday || 0}
-                            <span className="text-xs text-gray-500 ms-1">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-lg">
+                            <span className="text-sm font-bold text-emerald-600">
+                              {productTotals[product.id]?.globalToday || 0}
+                            </span>
+                            <span className="text-xs text-emerald-500">
                               {product.unit_of_measure}
                             </span>
                           </div>
@@ -497,8 +540,8 @@ export default function ProductionPage() {
             )}
 
             {filteredAndSortedProducts.length > 0 && hasEntries && (
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <Button onClick={handleSubmit} disabled={isSubmitting} className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20">
                   <Save className="w-4 h-4 me-2" />
                   {isSubmitting ? 'Saving...' : 'Save Entries'}
                 </Button>
@@ -506,73 +549,95 @@ export default function ProductionPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500 mb-6">
-            <Factory className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>Select a production line to enter production data</p>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-12 text-center">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
+              <Factory className="w-8 h-8 text-emerald-500" />
+            </div>
+            <p className="text-slate-600 font-medium">Select a production line to enter data</p>
+            <p className="text-sm text-slate-500 mt-2">Choose from the filters above to get started</p>
           </div>
         )}
 
         {/* History Section */}
         {showHistory && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium">{t('production.recentEntries')}</h3>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-violet-400 to-violet-500 rounded-xl shadow-sm">
+                  <History className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900">{t('production.recentEntries')}</h3>
+                  <p className="text-sm text-slate-500">Your recent production records</p>
+                </div>
+              </div>
             </div>
 
             {isLoading ? (
-              <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
+              <div className="p-8 text-center">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-slate-500 font-medium">{t('common.loading')}</span>
+                </div>
+              </div>
             ) : entries.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>{t('production.noEntries')}</p>
+              <div className="p-12 text-center">
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                  <History className="w-8 h-8 text-slate-400" />
+                </div>
+                <p className="text-slate-600 font-medium">{t('production.noEntries')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50/80">
                     <tr>
-                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         {t('production.dateTime')}
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         {t('production.line')}
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         {t('production.product')}
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         {t('production.quantity')}
                       </th>
-                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         {t('production.recordedBy')}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-slate-100">
                     {entries.map((entry) => (
-                      <tr key={entry.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                           {formatDate(entry.created_at)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-slate-900">
                             {entry.lines?.name}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-slate-500">
                             {entry.lines?.type}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-slate-900">
                             {entry.products?.name}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-slate-500">
                             {entry.products?.code}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {entry.quantity} {entry.unit_of_measure}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-lg">
+                            <span className="text-sm font-bold text-emerald-600">{entry.quantity}</span>
+                            <span className="text-xs text-emerald-500">{entry.unit_of_measure}</span>
+                          </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
                           {entry.profiles?.full_name}
                         </td>
                       </tr>

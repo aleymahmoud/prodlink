@@ -6,7 +6,7 @@ import { useTranslation } from '@/shared/i18n'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { createClient } from '@/shared/lib/supabase/client'
-import { Check, X, Clock, AlertCircle } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, ClipboardCheck, Filter, CheckCircle, XCircle } from 'lucide-react'
 
 interface WasteEntry {
   id: string
@@ -129,22 +129,22 @@ export default function ApprovalsPage() {
     switch (status) {
       case 'pending':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
+            <Clock className="w-3.5 h-3.5" />
             {t('waste.status.pending')}
           </span>
         )
       case 'approved':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-            <Check className="w-3 h-3" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+            <CheckCircle className="w-3.5 h-3.5" />
             {t('waste.status.approved')}
           </span>
         )
       case 'rejected':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-            <X className="w-3 h-3" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-red-50 text-red-700 border border-red-100">
+            <XCircle className="w-3.5 h-3.5" />
             {t('waste.status.rejected')}
           </span>
         )
@@ -153,10 +153,30 @@ export default function ApprovalsPage() {
     }
   }
 
+  const getFilterStyles = (filterValue: string) => {
+    const baseStyles = "px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
+    if (filter === filterValue) {
+      switch (filterValue) {
+        case 'pending':
+          return `${baseStyles} bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/20`
+        case 'approved':
+          return `${baseStyles} bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20`
+        case 'rejected':
+          return `${baseStyles} bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/20`
+        default:
+          return `${baseStyles} bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20`
+      }
+    }
+    return `${baseStyles} bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300`
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-500">{t('common.loading')}</div>
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-slate-500 font-medium">{t('common.loading')}</span>
+        </div>
       </div>
     )
   }
@@ -166,88 +186,132 @@ export default function ApprovalsPage() {
 
   return (
     <div>
-      <Header title={t('approvals.title')} />
+      <Header
+        title={t('approvals.title')}
+        subtitle={t('approvals.description')}
+        icon={
+          <div className="p-2.5 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg shadow-cyan-500/20">
+            <ClipboardCheck className="w-5 h-5 text-white" />
+          </div>
+        }
+      />
 
-      <div className="p-6">
-        <div className="mb-6">
-          <p className="text-gray-600">{t('approvals.description')}</p>
-        </div>
-
+      <div className="p-6 space-y-6">
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {(['pending', 'approved', 'rejected', 'all'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                filter === status
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-              }`}
-            >
-              {t(`approvals.filter.${status}`)}
-            </button>
-          ))}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-gradient-to-br from-slate-400 to-slate-500 rounded-xl shadow-sm">
+              <Filter className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">Filter by Status</h3>
+              <p className="text-sm text-slate-500">View entries by approval status</p>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {(['pending', 'approved', 'rejected', 'all'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={getFilterStyles(status)}
+              >
+                {t(`approvals.filter.${status}`)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Entries List */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-xl shadow-sm">
+                <ClipboardCheck className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Waste Entries</h3>
+                <p className="text-sm text-slate-500">{entries.length} entries found</p>
+              </div>
+            </div>
+          </div>
+
           {loadingEntries ? (
-            <div className="p-8 text-center text-gray-500">{t('common.loading')}</div>
+            <div className="p-8 text-center">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-slate-500 font-medium">{t('common.loading')}</span>
+              </div>
+            </div>
           ) : entries.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p>{t('approvals.noEntries')}</p>
+            <div className="p-12 text-center">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-cyan-50 flex items-center justify-center mb-4">
+                <AlertCircle className="w-8 h-8 text-cyan-400" />
+              </div>
+              <p className="text-slate-600 font-medium">{t('approvals.noEntries')}</p>
+              <p className="text-sm text-slate-500 mt-2">No entries match your current filter</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {entries.map((entry) => (
-                <div key={entry.id} className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="divide-y divide-slate-100">
+              {entries.map((entry, index) => (
+                <div
+                  key={entry.id}
+                  className="p-6 hover:bg-slate-50/50 transition-colors"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-medium text-gray-900">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="text-lg font-semibold text-slate-900">
                           {entry.product?.name}
                         </h3>
                         {getStatusBadge(entry.status)}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                        <p>
-                          <span className="font-medium">{t('production.line')}:</span>{' '}
-                          {entry.line?.name}
-                        </p>
-                        <p>
-                          <span className="font-medium">{t('production.quantity')}:</span>{' '}
-                          {entry.quantity}
-                        </p>
-                        <p>
-                          <span className="font-medium">{t('waste.reason')}:</span>{' '}
-                          {locale === 'ar' && entry.reason?.name_ar
-                            ? entry.reason.name_ar
-                            : entry.reason?.name}
-                        </p>
-                        <p>
-                          <span className="font-medium">{t('production.recordedBy')}:</span>{' '}
-                          {entry.recorded_by_user?.full_name}
-                        </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">{t('production.line')}:</span>
+                          <span className="font-medium text-slate-900">{entry.line?.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">{t('production.quantity')}:</span>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-red-50 rounded-md">
+                            <span className="font-bold text-red-600">{entry.quantity}</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">{t('waste.reason')}:</span>
+                          <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-md bg-red-100 text-red-700">
+                            {locale === 'ar' && entry.reason?.name_ar
+                              ? entry.reason.name_ar
+                              : entry.reason?.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">{t('production.recordedBy')}:</span>
+                          <span className="font-medium text-slate-900">{entry.recorded_by_user?.full_name}</span>
+                        </div>
                       </div>
+
                       {entry.notes && (
-                        <p className="mt-2 text-sm text-gray-500">
-                          <span className="font-medium">{t('production.notes')}:</span>{' '}
-                          {entry.notes}
-                        </p>
+                        <div className="mt-3 p-3 bg-slate-50 rounded-xl">
+                          <p className="text-sm text-slate-600">
+                            <span className="font-medium text-slate-700">{t('production.notes')}:</span>{' '}
+                            {entry.notes}
+                          </p>
+                        </div>
                       )}
-                      <p className="mt-2 text-xs text-gray-400">
+
+                      <p className="mt-3 text-xs text-slate-400 font-medium">
                         {formatDate(entry.created_at)}
                       </p>
                     </div>
 
                     {canApprove && entry.status === 'pending' && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 lg:flex-col xl:flex-row">
                         <Button
                           onClick={() => handleApprove(entry.id)}
                           disabled={processingId === entry.id}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20"
                         >
                           <Check className="w-4 h-4 me-2" />
                           {t('approvals.approve')}
@@ -256,7 +320,7 @@ export default function ApprovalsPage() {
                           variant="outline"
                           onClick={() => handleReject(entry.id)}
                           disabled={processingId === entry.id}
-                          className="border-red-300 text-red-600 hover:bg-red-50"
+                          className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
                         >
                           <X className="w-4 h-4 me-2" />
                           {t('approvals.reject')}
