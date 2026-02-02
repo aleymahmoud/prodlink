@@ -3,11 +3,42 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { useUser } from '@/features/auth/hooks/useUser'
 import { useTranslation } from '@/shared/i18n'
-import { Line, ProductWithLine, ProductionEntryWithRelations, LineType } from '@/shared/types/database'
 import { Factory, Filter, Save, History, Search, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, Package } from 'lucide-react'
+
+interface Line {
+  id: string
+  name: string
+  code: string
+  type: string
+  is_active: boolean
+}
+
+interface Product {
+  id: string
+  name: string
+  code: string
+  category: string | null
+  unit_of_measure: string
+  line_id: string | null
+  is_active: boolean
+}
+
+interface ProductionEntry {
+  id: string
+  line_id: string
+  product_id: string
+  quantity: number
+  unit_of_measure: string
+  batch_number: string | null
+  notes: string | null
+  created_by: string
+  created_at: string
+  lines?: { id: string; name: string; code: string; type?: string }
+  products?: { id: string; name: string; code: string }
+  profiles?: { id: string; full_name: string }
+}
 
 interface ProductEntry {
   product_id: string
@@ -35,10 +66,10 @@ type SortField = 'code' | 'name' | 'userToday' | 'globalToday'
 type SortDirection = 'asc' | 'desc'
 
 export default function ProductionPage() {
-  const [entries, setEntries] = useState<ProductionEntryWithRelations[]>([])
+  const [entries, setEntries] = useState<ProductionEntry[]>([])
   const [lines, setLines] = useState<Line[]>([])
-  const [products, setProducts] = useState<ProductWithLine[]>([])
-  const [todayEntries, setTodayEntries] = useState<ProductionEntryWithRelations[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [todayEntries, setTodayEntries] = useState<ProductionEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +78,7 @@ export default function ProductionPage() {
 
   // Filters
   const [selectedLineId, setSelectedLineId] = useState<string>('')
-  const [selectedLineType, setSelectedLineType] = useState<LineType | ''>('')
+  const [selectedLineType, setSelectedLineType] = useState<string>('')
   const [productSearch, setProductSearch] = useState<string>('')
 
   // Sorting
@@ -57,13 +88,14 @@ export default function ProductionPage() {
   // Product entries (quantity for each product)
   const [productEntries, setProductEntries] = useState<Record<string, ProductEntry>>({})
 
-  const { profile } = useUser()
+  const { user, profile } = useUser()
   const { t } = useTranslation()
-  const supabase = createClient()
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (user) {
+      fetchData()
+    }
+  }, [user])
 
   // Reset product entries when line changes
   useEffect(() => {
@@ -74,41 +106,38 @@ export default function ProductionPage() {
   const fetchData = async () => {
     setIsLoading(true)
 
-    // Get today's date range
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    try {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
 
-    const [entriesRes, linesRes, productsRes, todayEntriesRes] = await Promise.all([
-      supabase
-        .from('production_entries')
-        .select('*, lines(*), products(*), profiles(*)')
-        .order('created_at', { ascending: false })
-        .limit(50),
-      supabase
-        .from('lines')
-        .select('*')
-        .eq('is_active', true)
-        .order('name'),
-      supabase
-        .from('products')
-        .select('*, lines(*)')
-        .eq('is_active', true)
-        .order('name'),
-      supabase
-        .from('production_entries')
-        .select('*, lines(*), products(*), profiles(*)')
-        .gte('created_at', today.toISOString())
-        .lt('created_at', tomorrow.toISOString()),
-    ])
+      const [entriesRes, linesRes, productsRes, todayEntriesRes] = await Promise.all([
+        fetch('/api/production'),
+        fetch('/api/lines'),
+        fetch('/api/products'),
+        fetch(`/api/production?start_date=${today.toISOString()}`),
+      ])
 
-    if (entriesRes.data) setEntries(entriesRes.data)
-    if (linesRes.data) setLines(linesRes.data)
-    if (productsRes.data) setProducts(productsRes.data)
-    if (todayEntriesRes.data) setTodayEntries(todayEntriesRes.data)
-
-    setIsLoading(false)
+      if (entriesRes.ok) {
+        const data = await entriesRes.json()
+        setEntries(data)
+      }
+      if (linesRes.ok) {
+        const data = await linesRes.json()
+        setLines(data.filter((l: Line) => l.is_active))
+      }
+      if (productsRes.ok) {
+        const data = await productsRes.json()
+        setProducts(data.filter((p: Product) => p.is_active))
+      }
+      if (todayEntriesRes.ok) {
+        const data = await todayEntriesRes.json()
+        setTodayEntries(data)
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // Filter lines by type
@@ -234,19 +263,23 @@ export default function ProductionPage() {
     setSuccess(null)
 
     try {
-      const insertData = validEntries.map(entry => ({
-        line_id: selectedLineId,
-        product_id: entry.product_id,
-        quantity: parseFloat(entry.quantity),
-        unit_of_measure: entry.unit_of_measure,
-        created_by: profile.id,
-      }))
+      // Submit each entry
+      for (const entry of validEntries) {
+        const response = await fetch('/api/production', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            line_id: selectedLineId,
+            product_id: entry.product_id,
+            quantity: parseFloat(entry.quantity),
+            unit_of_measure: entry.unit_of_measure,
+          }),
+        })
 
-      const { error: insertError } = await supabase
-        .from('production_entries')
-        .insert(insertData)
-
-      if (insertError) throw insertError
+        if (!response.ok) {
+          throw new Error('Failed to save entry')
+        }
+      }
 
       setSuccess(`Successfully recorded ${validEntries.length} production ${validEntries.length === 1 ? 'entry' : 'entries'}`)
       setProductEntries({})
@@ -311,7 +344,7 @@ export default function ProductionPage() {
                 <select
                   value={selectedLineType}
                   onChange={(e) => {
-                    setSelectedLineType(e.target.value as LineType | '')
+                    setSelectedLineType(e.target.value)
                     setSelectedLineId('')
                   }}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer hover:bg-slate-100"

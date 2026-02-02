@@ -3,14 +3,24 @@
 import { useEffect, useState } from 'react'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { useUser } from '@/features/auth/hooks/useUser'
 import { useTranslation } from '@/shared/i18n'
-import { Line, Product, Reason, DamageEntryWithRelations } from '@/shared/types/database'
 import { Plus, X, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react'
 
+interface Line { id: string; name: string; code: string; type: string; is_active: boolean }
+interface Product { id: string; name: string; code: string; unit_of_measure: string; is_active: boolean }
+interface Reason { id: string; name: string; name_ar: string | null; type: string; is_active: boolean }
+interface DamageEntry {
+  id: string; line_id: string; product_id: string; quantity: number; unit_of_measure: string;
+  reason_id: string; notes: string | null; created_at: string;
+  lines?: { id: string; name: string; code: string };
+  products?: { id: string; name: string; code: string };
+  reasons?: { id: string; name: string; name_ar: string | null };
+  profiles?: { id: string; full_name: string };
+}
+
 export default function DamagePage() {
-  const [entries, setEntries] = useState<DamageEntryWithRelations[]>([])
+  const [entries, setEntries] = useState<DamageEntry[]>([])
   const [lines, setLines] = useState<Line[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [reasons, setReasons] = useState<Reason[]>([])
@@ -21,132 +31,59 @@ export default function DamagePage() {
   const [success, setSuccess] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
-    line_id: '',
-    product_id: '',
-    quantity: '',
-    reason_id: '',
-    batch_number: '',
-    notes: '',
+    line_id: '', product_id: '', quantity: '', reason_id: '', batch_number: '', notes: '',
   })
 
-  const { profile } = useUser()
+  const { user, profile } = useUser()
   const { t } = useTranslation()
-  const supabase = createClient()
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  useEffect(() => { if (user) fetchData() }, [user])
 
   const fetchData = async () => {
     setIsLoading(true)
-
-    const [entriesRes, linesRes, productsRes, reasonsRes] = await Promise.all([
-      supabase
-        .from('damage_entries')
-        .select('*, lines(*), products(*), reasons(*), profiles(*)')
-        .order('created_at', { ascending: false })
-        .limit(50),
-      supabase
-        .from('lines')
-        .select('*')
-        .eq('is_active', true)
-        .order('name'),
-      supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .order('name'),
-      supabase
-        .from('reasons')
-        .select('*')
-        .eq('is_active', true)
-        .eq('type', 'damage')
-        .order('name'),
-    ])
-
-    if (entriesRes.data) setEntries(entriesRes.data)
-    if (linesRes.data) setLines(linesRes.data)
-    if (productsRes.data) setProducts(productsRes.data)
-    if (reasonsRes.data) setReasons(reasonsRes.data)
-
-    setIsLoading(false)
+    try {
+      const [entriesRes, linesRes, productsRes, reasonsRes] = await Promise.all([
+        fetch('/api/damage'), fetch('/api/lines'), fetch('/api/products'), fetch('/api/reasons?type=damage'),
+      ])
+      if (entriesRes.ok) setEntries(await entriesRes.json())
+      if (linesRes.ok) setLines((await linesRes.json()).filter((l: Line) => l.is_active))
+      if (productsRes.ok) setProducts((await productsRes.json()).filter((p: Product) => p.is_active))
+      if (reasonsRes.ok) setReasons((await reasonsRes.json()).filter((r: Reason) => r.is_active))
+    } catch (err) { console.error('Error:', err) }
+    finally { setIsLoading(false) }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!profile) return
-
-    setIsSubmitting(true)
-    setError(null)
-    setSuccess(null)
-
+    setIsSubmitting(true); setError(null); setSuccess(null)
     const selectedProduct = products.find(p => p.id === formData.product_id)
-
-    const { error: insertError } = await supabase
-      .from('damage_entries')
-      .insert({
-        line_id: formData.line_id,
-        product_id: formData.product_id,
-        quantity: parseFloat(formData.quantity),
-        unit_of_measure: selectedProduct?.unit_of_measure || 'unit',
-        reason_id: formData.reason_id,
-        batch_number: formData.batch_number || null,
-        notes: formData.notes || null,
-        created_by: profile.id,
+    try {
+      const res = await fetch('/api/damage', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          line_id: formData.line_id, product_id: formData.product_id,
+          quantity: parseFloat(formData.quantity), unit_of_measure: selectedProduct?.unit_of_measure || 'unit',
+          reason_id: formData.reason_id, batch_number: formData.batch_number || null, notes: formData.notes || null,
+        }),
       })
-
-    if (insertError) {
-      setError(insertError.message)
-      setIsSubmitting(false)
-      return
-    }
-
-    setSuccess(t('damage.successMessage'))
-    setFormData({
-      line_id: formData.line_id,
-      product_id: '',
-      quantity: '',
-      reason_id: '',
-      batch_number: '',
-      notes: '',
-    })
-    setIsSubmitting(false)
-    fetchData()
+      if (!res.ok) throw new Error('Failed to submit')
+      setSuccess(t('damage.successMessage'))
+      setFormData({ ...formData, product_id: '', quantity: '', reason_id: '', batch_number: '', notes: '' })
+      fetchData()
+    } catch (err) { setError(err instanceof Error ? err.message : 'Error') }
+    finally { setIsSubmitting(false) }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
-  }
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleString()
 
   return (
     <div>
-      <Header
-        title={t('damage.title')}
-        subtitle={t('damage.description')}
-        icon={
-          <div className="p-2.5 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg shadow-amber-500/20">
-            <AlertTriangle className="w-5 h-5 text-white" />
-          </div>
-        }
-        actions={
-          <Button
-            onClick={() => setShowForm(!showForm)}
-            className={`rounded-xl ${showForm ? '' : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-500/20'}`}
-            variant={showForm ? 'outline' : 'primary'}
-          >
-            {showForm ? (
-              <>
-                <X className="w-4 h-4 me-2" />
-                {t('common.cancel')}
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 me-2" />
-                {t('damage.newEntry')}
-              </>
-            )}
-          </Button>
-        }
+      <Header title={t('damage.title')} subtitle={t('damage.description')}
+        icon={<div className="p-2.5 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg shadow-amber-500/20"><AlertTriangle className="w-5 h-5 text-white" /></div>}
+        actions={<Button onClick={() => setShowForm(!showForm)} className={`rounded-xl ${showForm ? '' : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-500/20'}`} variant={showForm ? 'outline' : 'primary'}>
+          {showForm ? <><X className="w-4 h-4 me-2" />{t('common.cancel')}</> : <><Plus className="w-4 h-4 me-2" />{t('damage.newEntry')}</>}
+        </Button>}
       />
 
       <div className="p-6 space-y-6">
@@ -154,155 +91,46 @@ export default function DamagePage() {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-sm">
-                  <Plus className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">{t('damage.newEntry')}</h3>
-                  <p className="text-sm text-slate-500">Record a new damage entry</p>
-                </div>
+                <div className="p-2 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-sm"><Plus className="w-4 h-4 text-white" /></div>
+                <div><h3 className="font-semibold text-slate-900">{t('damage.newEntry')}</h3><p className="text-sm text-slate-500">Record a new damage entry</p></div>
               </div>
             </div>
-
             <div className="p-6">
-              {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-3">
-                  <div className="p-1 bg-red-100 rounded-lg">
-                    <XCircle className="w-4 h-4" />
-                  </div>
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm flex items-center gap-3">
-                  <div className="p-1 bg-emerald-100 rounded-lg">
-                    <CheckCircle className="w-4 h-4" />
-                  </div>
-                  {success}
-                </div>
-              )}
-
+              {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-center gap-3"><div className="p-1 bg-red-100 rounded-lg"><XCircle className="w-4 h-4" /></div>{error}</div>}
+              {success && <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm flex items-center gap-3"><div className="p-1 bg-emerald-100 rounded-lg"><CheckCircle className="w-4 h-4" /></div>{success}</div>}
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      {t('production.line')} *
-                    </label>
-                    <select
-                      value={formData.line_id}
-                      onChange={(e) => setFormData({ ...formData, line_id: e.target.value })}
-                      required
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
-                    >
+                  <div className="space-y-2"><label className="block text-sm font-medium text-slate-700">{t('production.line')} *</label>
+                    <select value={formData.line_id} onChange={(e) => setFormData({ ...formData, line_id: e.target.value })} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
                       <option value="">{t('production.selectLine')}</option>
-                      {lines.map((line) => (
-                        <option key={line.id} value={line.id}>
-                          {line.name} ({line.code})
-                        </option>
-                      ))}
+                      {lines.map((line) => <option key={line.id} value={line.id}>{line.name} ({line.code})</option>)}
                     </select>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      {t('production.product')} *
-                    </label>
-                    <select
-                      value={formData.product_id}
-                      onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}
-                      required
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
-                    >
+                  <div className="space-y-2"><label className="block text-sm font-medium text-slate-700">{t('production.product')} *</label>
+                    <select value={formData.product_id} onChange={(e) => setFormData({ ...formData, product_id: e.target.value })} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
                       <option value="">{t('production.selectProduct')}</option>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name} ({product.code})
-                        </option>
-                      ))}
+                      {products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                     </select>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      {t('production.quantity')} *
-                    </label>
+                  <div className="space-y-2"><label className="block text-sm font-medium text-slate-700">{t('production.quantity')} *</label>
                     <div className="flex">
-                      <input
-                        type="number"
-                        step="0.001"
-                        min="0.001"
-                        value={formData.quantity}
-                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                        required
-                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-s-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
-                        placeholder={t('production.enterQuantity')}
-                      />
-                      <span className="inline-flex items-center px-4 py-3 border border-s-0 border-slate-200 bg-slate-100 text-slate-600 rounded-e-xl text-sm font-medium">
-                        {products.find(p => p.id === formData.product_id)?.unit_of_measure || 'units'}
-                      </span>
+                      <input type="number" step="0.001" min="0.001" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-s-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500" placeholder={t('production.enterQuantity')} />
+                      <span className="inline-flex items-center px-4 py-3 border border-s-0 border-slate-200 bg-slate-100 text-slate-600 rounded-e-xl text-sm font-medium">{products.find(p => p.id === formData.product_id)?.unit_of_measure || 'units'}</span>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      {t('damage.reason')} *
-                    </label>
-                    <select
-                      value={formData.reason_id}
-                      onChange={(e) => setFormData({ ...formData, reason_id: e.target.value })}
-                      required
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
-                    >
+                  <div className="space-y-2"><label className="block text-sm font-medium text-slate-700">{t('damage.reason')} *</label>
+                    <select value={formData.reason_id} onChange={(e) => setFormData({ ...formData, reason_id: e.target.value })} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
                       <option value="">{t('damage.selectReason')}</option>
-                      {reasons.map((reason) => (
-                        <option key={reason.id} value={reason.id}>
-                          {reason.name}
-                        </option>
-                      ))}
+                      {reasons.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
-                    {reasons.length === 0 && (
-                      <p className="text-xs text-amber-600 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        {t('damage.noReasonsConfigured')}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">
-                      {t('production.batchNumber')}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.batch_number}
-                      onChange={(e) => setFormData({ ...formData, batch_number: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
-                      placeholder={t('production.optionalBatch')}
-                    />
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    {t('production.notes')}
-                  </label>
-                  <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all resize-none"
-                    placeholder={t('damage.notesPlaceholder')}
-                  />
+                <div className="space-y-2"><label className="block text-sm font-medium text-slate-700">{t('production.notes')}</label>
+                  <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 resize-none" placeholder="Optional notes..." />
                 </div>
-
                 <div className="flex justify-end pt-2">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-500/20"
-                  >
-                    {isSubmitting ? t('production.saving') : t('production.saveEntry')}
+                  <Button type="submit" disabled={isSubmitting} className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-500/20">
+                    {isSubmitting ? 'Submitting...' : t('damage.submit')}
                   </Button>
                 </div>
               </form>
@@ -310,96 +138,39 @@ export default function DamagePage() {
           </div>
         )}
 
-        {/* Entries Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-sm">
-                <Clock className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900">{t('damage.recentEntries')}</h3>
-                <p className="text-sm text-slate-500">Track your damage reports</p>
-              </div>
+              <div className="p-2 bg-gradient-to-br from-amber-400 to-amber-500 rounded-xl shadow-sm"><Clock className="w-4 h-4 text-white" /></div>
+              <div><h3 className="font-semibold text-slate-900">{t('damage.recentEntries')}</h3><p className="text-sm text-slate-500">Track your damage records</p></div>
             </div>
           </div>
-
           {isLoading ? (
-            <div className="p-8 text-center">
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                <span className="text-slate-500 font-medium">{t('common.loading')}</span>
-              </div>
-            </div>
+            <div className="p-8 text-center"><div className="flex items-center justify-center gap-3"><div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /><span className="text-slate-500 font-medium">{t('common.loading')}</span></div></div>
           ) : entries.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
-                <AlertTriangle className="w-8 h-8 text-amber-400" />
-              </div>
-              <p className="text-slate-600 font-medium">{t('damage.noEntries')}</p>
-              <p className="text-sm text-slate-500 mt-2">{t('damage.clickToRecord')}</p>
-            </div>
+            <div className="p-12 text-center"><div className="mx-auto w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4"><AlertTriangle className="w-8 h-8 text-amber-400" /></div><p className="text-slate-600 font-medium">{t('damage.noEntries')}</p></div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50/80">
                   <tr>
-                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      {t('production.dateTime')}
-                    </th>
-                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      {t('production.line')}
-                    </th>
-                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      {t('production.product')}
-                    </th>
-                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      {t('production.quantity')}
-                    </th>
-                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      {t('damage.reason')}
-                    </th>
-                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      {t('production.recordedBy')}
-                    </th>
+                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('production.dateTime')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('production.line')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('production.product')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('production.quantity')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('damage.reason')}</th>
+                    <th className="px-6 py-4 text-start text-xs font-semibold text-slate-600 uppercase tracking-wider">{t('production.recordedBy')}</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-100">
                   {entries.map((entry) => (
                     <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {formatDate(entry.created_at)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-slate-900">
-                          {entry.lines?.name}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {entry.lines?.code}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-slate-900">
-                          {entry.products?.name}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {entry.products?.code}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-lg">
-                          <span className="text-sm font-bold text-amber-600">{entry.quantity}</span>
-                          <span className="text-xs text-amber-500">{entry.unit_of_measure}</span>
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-100 text-amber-700">
-                          {entry.reasons?.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
-                        {entry.profiles?.full_name}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{formatDate(entry.created_at)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-semibold text-slate-900">{entry.lines?.name}</div><div className="text-xs text-slate-500">{entry.lines?.code}</div></td>
+                      <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-semibold text-slate-900">{entry.products?.name}</div><div className="text-xs text-slate-500">{entry.products?.code}</div></td>
+                      <td className="px-6 py-4 whitespace-nowrap"><span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-lg"><span className="text-sm font-bold text-amber-600">{entry.quantity}</span><span className="text-xs text-amber-500">{entry.unit_of_measure}</span></span></td>
+                      <td className="px-6 py-4 whitespace-nowrap"><span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-100 text-amber-700">{entry.reasons?.name}</span></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">{entry.profiles?.full_name}</td>
                     </tr>
                   ))}
                 </tbody>

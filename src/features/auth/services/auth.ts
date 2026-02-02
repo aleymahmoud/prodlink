@@ -1,43 +1,21 @@
-import { createClient } from '@/shared/lib/supabase/client'
+import { signOut as nextAuthSignOut } from 'next-auth/react'
 
 export async function signOut() {
-  const supabase = createClient()
-  const { error } = await supabase.auth.signOut()
-
-  if (error) {
-    throw error
-  }
-
-  // Redirect to login
-  window.location.href = '/login'
+  await nextAuthSignOut({ callbackUrl: '/login' })
 }
 
 export async function getCurrentUser() {
-  const supabase = createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error) {
-    throw error
-  }
-
-  return user
+  const response = await fetch('/api/auth/session')
+  const session = await response.json()
+  return session?.user || null
 }
 
 export async function getCurrentProfile() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
+  const user = await getCurrentUser()
   if (!user) return null
 
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const response = await fetch(`/api/profile/${user.id}`)
+  if (!response.ok) return null
 
-  if (error) {
-    throw error
-  }
-
-  return profile
+  return response.json()
 }

@@ -2,9 +2,16 @@
 
 import { useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
-import { Line, LineType } from '@/shared/types/database'
 import { X } from 'lucide-react'
+
+type LineType = 'finished' | 'semi-finished'
+
+interface Line {
+  id: string
+  name: string
+  code: string
+  type: LineType
+}
 
 interface LineModalProps {
   line: Line | null
@@ -19,7 +26,6 @@ export function LineModal({ line, onClose, onSave }: LineModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
   const isEditing = !!line
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,27 +34,21 @@ export function LineModal({ line, onClose, onSave }: LineModalProps) {
     setError(null)
 
     try {
-      if (isEditing) {
-        const { error: updateError } = await supabase
-          .from('lines')
-          .update({
-            name,
-            code,
-            type,
-          })
-          .eq('id', line.id)
+      const url = '/api/lines'
+      const method = isEditing ? 'PUT' : 'POST'
+      const body = isEditing
+        ? { id: line.id, name, code, type }
+        : { name, code, type }
 
-        if (updateError) throw updateError
-      } else {
-        const { error: insertError } = await supabase
-          .from('lines')
-          .insert({
-            name,
-            code,
-            type,
-          })
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
 
-        if (insertError) throw insertError
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to save line')
       }
 
       onSave()

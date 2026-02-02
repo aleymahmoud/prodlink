@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { X, Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react'
 
 interface UploadModalProps {
@@ -24,8 +23,6 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const supabase = createClient()
 
   const parseCSV = (text: string): ParsedProduct[] => {
     const lines = text.trim().split('\n')
@@ -90,13 +87,19 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
     setError(null)
 
     try {
-      const { error: insertError } = await supabase
-        .from('products')
-        .upsert(parsedData, { onConflict: 'code' })
+      const res = await fetch('/api/products/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: parsedData }),
+      })
 
-      if (insertError) throw insertError
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to import products')
+      }
 
-      setSuccess(`Successfully imported ${parsedData.length} products`)
+      const result = await res.json()
+      setSuccess(`Successfully imported ${result.imported} products`)
       setTimeout(() => {
         onSave()
       }, 1500)

@@ -2,12 +2,29 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
-import { Line, ProductWithLine } from '@/shared/types/database'
 import { Plus, Edit, Trash2, Upload, Filter } from 'lucide-react'
 import { ProductModal } from './ProductModal'
 import { UploadModal } from './UploadModal'
+
+interface Line {
+  id: string
+  name: string
+  code: string
+  type: string
+  is_active: boolean
+}
+
+interface ProductWithLine {
+  id: string
+  name: string
+  code: string
+  category: string | null
+  unit_of_measure: string
+  line_id: string | null
+  is_active: boolean
+  lines: Line | null
+}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<ProductWithLine[]>([])
@@ -19,7 +36,6 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<ProductWithLine | null>(null)
 
   const { t } = useTranslation()
-  const supabase = createClient()
 
   useEffect(() => {
     fetchLines()
@@ -27,24 +43,27 @@ export default function ProductsPage() {
   }, [])
 
   const fetchLines = async () => {
-    const { data } = await supabase
-      .from('lines')
-      .select('*')
-      .eq('is_active', true)
-      .order('name')
-
-    if (data) setLines(data)
+    try {
+      const res = await fetch('/api/lines')
+      if (res.ok) {
+        const data = await res.json()
+        setLines(data.filter((l: Line) => l.is_active))
+      }
+    } catch (error) {
+      console.error('Error fetching lines:', error)
+    }
   }
 
   const fetchProducts = async () => {
     setIsLoading(true)
-    const { data, error } = await supabase
-      .from('products')
-      .select('*, lines(*)')
-      .order('name')
-
-    if (!error && data) {
-      setProducts(data)
+    try {
+      const res = await fetch('/api/products')
+      if (res.ok) {
+        const data = await res.json()
+        setProducts(data)
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error)
     }
     setIsLoading(false)
   }
@@ -79,13 +98,20 @@ export default function ProductsPage() {
   }
 
   const toggleProductStatus = async (product: ProductWithLine) => {
-    const { error } = await supabase
-      .from('products')
-      .update({ is_active: !product.is_active })
-      .eq('id', product.id)
-
-    if (!error) {
-      fetchProducts()
+    try {
+      const res = await fetch('/api/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: product.id,
+          is_active: !product.is_active,
+        }),
+      })
+      if (res.ok) {
+        fetchProducts()
+      }
+    } catch (error) {
+      console.error('Error toggling product status:', error)
     }
   }
 

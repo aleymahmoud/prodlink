@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
-import { User, UserRole } from '@/shared/types/database'
 import { Plus, Edit, UserCheck, UserX } from 'lucide-react'
 import { UserModal } from './UserModal'
+
+type UserRole = 'admin' | 'engineer' | 'approver' | 'viewer'
+
+interface User {
+  id: string
+  email: string
+  full_name: string
+  role: UserRole
+  is_active: boolean
+  created_at: string
+}
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -15,7 +24,6 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
 
   const { t } = useTranslation()
-  const supabase = createClient()
 
   useEffect(() => {
     fetchUsers()
@@ -23,13 +31,14 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     setIsLoading(true)
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (!error && data) {
-      setUsers(data)
+    try {
+      const res = await fetch('/api/users')
+      if (res.ok) {
+        const data = await res.json()
+        setUsers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
     }
     setIsLoading(false)
   }
@@ -55,13 +64,20 @@ export default function UsersPage() {
   }
 
   const toggleUserStatus = async (user: User) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_active: !user.is_active })
-      .eq('id', user.id)
-
-    if (!error) {
-      fetchUsers()
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          is_active: !user.is_active,
+        }),
+      })
+      if (res.ok) {
+        fetchUsers()
+      }
+    } catch (error) {
+      console.error('Error toggling user status:', error)
     }
   }
 

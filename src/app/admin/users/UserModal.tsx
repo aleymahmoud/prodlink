@@ -2,9 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
-import { User, UserRole, Line } from '@/shared/types/database'
 import { X } from 'lucide-react'
+
+type UserRole = 'admin' | 'engineer' | 'approver' | 'viewer'
+
+interface User {
+  id: string
+  email: string
+  full_name: string
+  role: UserRole
+  is_active: boolean
+}
+
+interface Line {
+  id: string
+  name: string
+  code: string
+  type: string
+  is_active: boolean
+}
 
 interface UserModalProps {
   user: User | null
@@ -22,7 +38,6 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
   const isEditing = !!user
 
   useEffect(() => {
@@ -33,27 +48,28 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
   }, [user])
 
   const fetchLines = async () => {
-    const { data } = await supabase
-      .from('lines')
-      .select('*')
-      .eq('is_active', true)
-      .order('name')
-
-    if (data) {
-      setLines(data)
+    try {
+      const res = await fetch('/api/lines')
+      if (res.ok) {
+        const data = await res.json()
+        setLines(data.filter((l: Line) => l.is_active))
+      }
+    } catch (error) {
+      console.error('Error fetching lines:', error)
     }
   }
 
   const fetchUserLines = async () => {
     if (!user) return
 
-    const { data } = await supabase
-      .from('user_line_assignments')
-      .select('line_id')
-      .eq('user_id', user.id)
-
-    if (data) {
-      setSelectedLines(data.map((d) => d.line_id))
+    try {
+      const res = await fetch(`/api/users/${user.id}/lines`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedLines(data.map((d: { line_id: string }) => d.line_id))
+      }
+    } catch (error) {
+      console.error('Error fetching user lines:', error)
     }
   }
 
@@ -65,47 +81,32 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
     try {
       if (isEditing) {
         // Update existing user
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
+        const res = await fetch('/api/users', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: user.id,
             full_name: fullName,
             role: role,
-          })
-          .eq('id', user.id)
+            line_ids: selectedLines,
+          }),
+        })
 
-        if (updateError) throw updateError
-
-        // Update line assignments
-        await supabase
-          .from('user_line_assignments')
-          .delete()
-          .eq('user_id', user.id)
-
-        if (selectedLines.length > 0) {
-          const assignments = selectedLines.map((lineId) => ({
-            user_id: user.id,
-            line_id: lineId,
-          }))
-
-          const { error: assignError } = await supabase
-            .from('user_line_assignments')
-            .insert(assignments)
-
-          if (assignError) throw assignError
+        if (!res.ok) {
+          const data = await res.json()
+          throw new Error(data.error || 'Failed to update user')
         }
       } else {
-        // Create new user via API route (doesn't sign out admin)
+        // Create new user via API route
         if (!password) {
           setError('Password is required for new users')
           setIsLoading(false)
           return
         }
 
-        const response = await fetch('/api/admin/users', {
+        const response = await fetch('/api/auth/register', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
             password,

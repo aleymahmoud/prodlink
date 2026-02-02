@@ -2,11 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
-import { Line, LineType } from '@/shared/types/database'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import { LineModal } from './LineModal'
+
+type LineType = 'finished' | 'semi-finished'
+
+interface Line {
+  id: string
+  name: string
+  code: string
+  type: LineType
+  is_active: boolean
+}
 
 export default function LinesPage() {
   const [lines, setLines] = useState<Line[]>([])
@@ -15,7 +23,6 @@ export default function LinesPage() {
   const [editingLine, setEditingLine] = useState<Line | null>(null)
 
   const { t } = useTranslation()
-  const supabase = createClient()
 
   useEffect(() => {
     fetchLines()
@@ -23,13 +30,14 @@ export default function LinesPage() {
 
   const fetchLines = async () => {
     setIsLoading(true)
-    const { data, error } = await supabase
-      .from('lines')
-      .select('*')
-      .order('name')
-
-    if (!error && data) {
-      setLines(data)
+    try {
+      const res = await fetch('/api/lines')
+      if (res.ok) {
+        const data = await res.json()
+        setLines(data)
+      }
+    } catch (error) {
+      console.error('Error fetching lines:', error)
     }
     setIsLoading(false)
   }
@@ -55,13 +63,20 @@ export default function LinesPage() {
   }
 
   const toggleLineStatus = async (line: Line) => {
-    const { error } = await supabase
-      .from('lines')
-      .update({ is_active: !line.is_active })
-      .eq('id', line.id)
-
-    if (!error) {
-      fetchLines()
+    try {
+      const res = await fetch('/api/lines', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: line.id,
+          is_active: !line.is_active,
+        }),
+      })
+      if (res.ok) {
+        fetchLines()
+      }
+    } catch (error) {
+      console.error('Error toggling line status:', error)
     }
   }
 

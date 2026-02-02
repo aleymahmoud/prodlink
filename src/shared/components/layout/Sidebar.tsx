@@ -190,10 +190,10 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
           <div className="mb-4 p-3 bg-slate-800/30 rounded-xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-semibold text-sm shadow-lg">
-                {profile.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                {profile.fullName?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{profile.full_name}</p>
+                <p className="text-sm font-medium text-white truncate">{profile.fullName}</p>
                 <p className="text-xs text-slate-400 truncate">{profile.email}</p>
               </div>
             </div>

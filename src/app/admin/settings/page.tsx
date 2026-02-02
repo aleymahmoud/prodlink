@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
 import { CheckCircle, Globe, Workflow, Sparkles } from 'lucide-react'
 
@@ -13,7 +12,6 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState(false)
 
   const { t } = useTranslation()
-  const supabase = createClient()
 
   useEffect(() => {
     fetchSettings()
@@ -21,15 +19,17 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     setIsLoading(true)
-    const { data } = await supabase
-      .from('system_settings')
-      .select('*')
-
-    if (data) {
-      const langSetting = data.find((s) => s.key === 'default_language')
-      if (langSetting) {
-        setDefaultLanguage(langSetting.value || 'en')
+    try {
+      const res = await fetch('/api/settings')
+      if (res.ok) {
+        const data = await res.json()
+        const langSetting = data.find((s: { key: string }) => s.key === 'default_language')
+        if (langSetting) {
+          setDefaultLanguage(langSetting.value || 'en')
+        }
       }
+    } catch (error) {
+      console.error('Error fetching settings:', error)
     }
     setIsLoading(false)
   }
@@ -38,14 +38,22 @@ export default function SettingsPage() {
     setIsSaving(true)
     setSuccess(false)
 
-    const { error } = await supabase
-      .from('system_settings')
-      .update({ value: defaultLanguage })
-      .eq('key', 'default_language')
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'default_language',
+          value: defaultLanguage,
+        }),
+      })
 
-    if (!error) {
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+      if (res.ok) {
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
     }
     setIsSaving(false)
   }

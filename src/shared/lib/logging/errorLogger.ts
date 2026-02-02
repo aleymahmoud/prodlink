@@ -1,7 +1,5 @@
 'use client'
 
-import { createClient } from '@/shared/lib/supabase/client'
-
 interface LogEntry {
   type: 'error' | 'warning' | 'info' | 'performance'
   message: string
@@ -11,28 +9,16 @@ interface LogEntry {
 }
 
 class ErrorLogger {
-  private supabase = createClient()
-
   async log(entry: LogEntry): Promise<void> {
-    try {
-      const { data: { user } } = await this.supabase.auth.getUser()
-
-      await this.supabase.from('error_logs').insert({
-        type: entry.type,
-        message: entry.message,
-        stack: entry.stack,
-        url: entry.url || (typeof window !== 'undefined' ? window.location.href : null),
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-        user_id: user?.id || null,
-        metadata: entry.metadata || {},
-      })
-    } catch (e) {
-      // Silently fail - don't cause errors while logging errors
-      console.error('Failed to log error:', e)
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[${entry.type.toUpperCase()}]`, entry.message, entry.metadata || '')
     }
+    // TODO: Implement error logging to database when error_logs table is added
   }
 
   error(message: string, error?: Error, metadata?: Record<string, unknown>): void {
+    console.error(message, error)
     this.log({
       type: 'error',
       message,
@@ -42,6 +28,7 @@ class ErrorLogger {
   }
 
   warning(message: string, metadata?: Record<string, unknown>): void {
+    console.warn(message, metadata)
     this.log({
       type: 'warning',
       message,
@@ -50,6 +37,7 @@ class ErrorLogger {
   }
 
   info(message: string, metadata?: Record<string, unknown>): void {
+    console.info(message, metadata)
     this.log({
       type: 'info',
       message,

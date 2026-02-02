@@ -5,7 +5,6 @@ import { useUser } from '@/features/auth/hooks/useUser'
 import { useTranslation } from '@/shared/i18n'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { Check, X, Clock, AlertCircle, ClipboardCheck, Filter, CheckCircle, XCircle } from 'lucide-react'
 
 interface WasteEntry {
@@ -14,10 +13,10 @@ interface WasteEntry {
   notes: string | null
   status: 'pending' | 'approved' | 'rejected'
   created_at: string
-  line: { name: string }
-  product: { name: string }
-  reason: { name: string; name_ar?: string }
-  recorded_by_user: { full_name: string }
+  line: { name: string } | null
+  product: { name: string } | null
+  reason: { name: string; name_ar?: string } | null
+  recorded_by_user: { full_name: string } | null
 }
 
 export default function ApprovalsPage() {
@@ -28,8 +27,6 @@ export default function ApprovalsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
 
-  const supabase = createClient()
-
   useEffect(() => {
     if (profile) {
       fetchEntries()
@@ -39,31 +36,12 @@ export default function ApprovalsPage() {
   const fetchEntries = async () => {
     setLoadingEntries(true)
     try {
-      let query = supabase
-        .from('waste_entries')
-        .select(`
-          id,
-          quantity,
-          notes,
-          status,
-          created_at,
-          line:lines(name),
-          product:products(name),
-          reason:reasons(name, name_ar),
-          recorded_by_user:profiles!waste_entries_recorded_by_fkey(full_name)
-        `)
-        .order('created_at', { ascending: false })
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        console.error('Error fetching entries:', error)
+      const res = await fetch(`/api/approvals?status=${filter}`)
+      if (res.ok) {
+        const data = await res.json()
+        setEntries(data)
       } else {
-        setEntries(data as unknown as WasteEntry[])
+        console.error('Error fetching entries')
       }
     } catch (error) {
       console.error('Error:', error)
@@ -76,19 +54,20 @@ export default function ApprovalsPage() {
     if (!profile) return
     setProcessingId(id)
 
-    const { error } = await supabase
-      .from('waste_entries')
-      .update({
-        status: 'approved',
-        approved_by: profile.id,
-        approved_at: new Date().toISOString(),
+    try {
+      const res = await fetch('/api/approvals', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'approved' }),
       })
-      .eq('id', id)
 
-    if (!error) {
-      fetchEntries()
-    } else {
-      console.error('Error approving:', error)
+      if (res.ok) {
+        fetchEntries()
+      } else {
+        console.error('Error approving')
+      }
+    } catch (error) {
+      console.error('Error:', error)
     }
     setProcessingId(null)
   }
@@ -97,19 +76,20 @@ export default function ApprovalsPage() {
     if (!profile) return
     setProcessingId(id)
 
-    const { error } = await supabase
-      .from('waste_entries')
-      .update({
-        status: 'rejected',
-        approved_by: profile.id,
-        approved_at: new Date().toISOString(),
+    try {
+      const res = await fetch('/api/approvals', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'rejected' }),
       })
-      .eq('id', id)
 
-    if (!error) {
-      fetchEntries()
-    } else {
-      console.error('Error rejecting:', error)
+      if (res.ok) {
+        fetchEntries()
+      } else {
+        console.error('Error rejecting')
+      }
+    } catch (error) {
+      console.error('Error:', error)
     }
     setProcessingId(null)
   }

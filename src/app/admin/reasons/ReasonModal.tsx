@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
-import { Reason } from '@/shared/types/database'
 import { X } from 'lucide-react'
 
 type ReasonType = 'waste' | 'damage' | 'reprocessing'
+
+interface Reason {
+  id: string
+  name: string
+  name_ar: string | null
+  type: ReasonType
+}
 
 interface ReasonModalProps {
   reason: Reason | null
@@ -17,12 +22,11 @@ interface ReasonModalProps {
 
 export function ReasonModal({ reason, defaultType, onClose, onSave }: ReasonModalProps) {
   const [name, setName] = useState(reason?.name || '')
-  const [nameAr, setNameAr] = useState((reason as Reason & { name_ar?: string })?.name_ar || '')
-  const [type, setType] = useState<ReasonType>(reason?.type as ReasonType || defaultType)
+  const [nameAr, setNameAr] = useState(reason?.name_ar || '')
+  const [type, setType] = useState<ReasonType>(reason?.type || defaultType)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
   const isEditing = !!reason
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,27 +35,30 @@ export function ReasonModal({ reason, defaultType, onClose, onSave }: ReasonModa
     setError(null)
 
     try {
-      if (isEditing) {
-        const { error: updateError } = await supabase
-          .from('reasons')
-          .update({
+      const url = '/api/reasons'
+      const method = isEditing ? 'PUT' : 'POST'
+      const body = isEditing
+        ? {
+            id: reason.id,
             name,
             name_ar: nameAr || null,
             type,
-          })
-          .eq('id', reason.id)
-
-        if (updateError) throw updateError
-      } else {
-        const { error: insertError } = await supabase
-          .from('reasons')
-          .insert({
+          }
+        : {
             name,
             name_ar: nameAr || null,
             type,
-          })
+          }
 
-        if (insertError) throw insertError
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to save reason')
       }
 
       onSave()

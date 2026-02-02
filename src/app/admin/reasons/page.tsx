@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
 import { useTranslation } from '@/shared/i18n'
-import { Reason } from '@/shared/types/database'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import { ReasonModal } from './ReasonModal'
 
 type ReasonType = 'waste' | 'damage' | 'reprocessing'
+
+interface Reason {
+  id: string
+  name: string
+  name_ar: string | null
+  type: ReasonType
+  is_active: boolean
+}
 
 export default function ReasonsPage() {
   const [reasons, setReasons] = useState<Reason[]>([])
@@ -18,7 +24,6 @@ export default function ReasonsPage() {
   const [activeTab, setActiveTab] = useState<ReasonType>('waste')
 
   const { t } = useTranslation()
-  const supabase = createClient()
 
   useEffect(() => {
     fetchReasons()
@@ -26,14 +31,14 @@ export default function ReasonsPage() {
 
   const fetchReasons = async () => {
     setIsLoading(true)
-    const { data, error } = await supabase
-      .from('reasons')
-      .select('*')
-      .order('type')
-      .order('name')
-
-    if (!error && data) {
-      setReasons(data)
+    try {
+      const res = await fetch('/api/reasons')
+      if (res.ok) {
+        const data = await res.json()
+        setReasons(data)
+      }
+    } catch (error) {
+      console.error('Error fetching reasons:', error)
     }
     setIsLoading(false)
   }
@@ -59,13 +64,20 @@ export default function ReasonsPage() {
   }
 
   const toggleReasonStatus = async (reason: Reason) => {
-    const { error } = await supabase
-      .from('reasons')
-      .update({ is_active: !reason.is_active })
-      .eq('id', reason.id)
-
-    if (!error) {
-      fetchReasons()
+    try {
+      const res = await fetch('/api/reasons', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: reason.id,
+          is_active: !reason.is_active,
+        }),
+      })
+      if (res.ok) {
+        fetchReasons()
+      }
+    } catch (error) {
+      console.error('Error toggling reason status:', error)
     }
   }
 
@@ -146,7 +158,7 @@ export default function ReasonsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500" dir="rtl">
-                        {(reason as Reason & { name_ar?: string }).name_ar || '-'}
+                        {reason.name_ar || '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

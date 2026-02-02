@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
+import { SessionProvider } from 'next-auth/react'
 import { I18nProvider } from '@/shared/i18n'
 
 interface ProvidersProps {
@@ -9,8 +10,10 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <I18nProvider>
-      {children}
-    </I18nProvider>
+    <SessionProvider>
+      <I18nProvider>
+        {children}
+      </I18nProvider>
+    </SessionProvider>
   )
 }

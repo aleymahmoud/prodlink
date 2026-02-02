@@ -1,24 +1,16 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/shared/lib/supabase/server'
+import { auth } from '@/auth'
 
 const VERCEL_TOKEN = process.env.VERCEL_TOKEN
 
 export async function GET() {
-  // Check if user is admin
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await auth()
 
-  if (!user) {
+  if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
+  if (session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 

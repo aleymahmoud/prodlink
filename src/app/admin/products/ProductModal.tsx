@@ -2,9 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/shared/components/ui/Button'
-import { createClient } from '@/shared/lib/supabase/client'
-import { Product, Line } from '@/shared/types/database'
 import { X } from 'lucide-react'
+
+interface Product {
+  id: string
+  name: string
+  code: string
+  category: string | null
+  unit_of_measure: string
+  line_id: string | null
+}
+
+interface Line {
+  id: string
+  name: string
+  code: string
+  type: string
+  is_active: boolean
+}
 
 interface ProductModalProps {
   product: Product | null
@@ -22,7 +37,6 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
   const isEditing = !!product
 
   useEffect(() => {
@@ -30,13 +44,15 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
   }, [])
 
   const fetchLines = async () => {
-    const { data } = await supabase
-      .from('lines')
-      .select('*')
-      .eq('is_active', true)
-      .order('name')
-
-    if (data) setLines(data)
+    try {
+      const res = await fetch('/api/lines')
+      if (res.ok) {
+        const data = await res.json()
+        setLines(data.filter((l: Line) => l.is_active))
+      }
+    } catch (error) {
+      console.error('Error fetching lines:', error)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,31 +61,34 @@ export function ProductModal({ product, onClose, onSave }: ProductModalProps) {
     setError(null)
 
     try {
-      if (isEditing) {
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({
+      const url = '/api/products'
+      const method = isEditing ? 'PUT' : 'POST'
+      const body = isEditing
+        ? {
+            id: product.id,
             name,
             code,
             category: category || null,
             unit_of_measure: unitOfMeasure,
             line_id: lineId || null,
-          })
-          .eq('id', product.id)
-
-        if (updateError) throw updateError
-      } else {
-        const { error: insertError } = await supabase
-          .from('products')
-          .insert({
+          }
+        : {
             name,
             code,
             category: category || null,
             unit_of_measure: unitOfMeasure,
             line_id: lineId || null,
-          })
+          }
 
-        if (insertError) throw insertError
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to save product')
       }
 
       onSave()
