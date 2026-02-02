@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/shared/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Factory, BarChart3, Shield, Zap, ArrowRight, Mail, Lock, User } from 'lucide-react'
+import { Factory, BarChart3, Shield, Zap, ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isSignUp, setIsSignUp] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -100,23 +101,44 @@ export default function LoginPage() {
             backgroundSize: '50px 50px'
           }} />
 
-          {/* Floating orbs with animation */}
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/30 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-cyan-500/25 rounded-full blur-3xl animate-float-delayed" />
-          <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl animate-float-slow" />
+          {/* Large floating orbs */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-1/4 right-1/6 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-float-delayed" />
+          <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl animate-float-slow" />
+          <div className="absolute top-10 right-1/3 w-64 h-64 bg-purple-500/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
 
-          {/* Animated rings */}
-          <div className="absolute top-20 right-20 w-32 h-32 border border-white/10 rounded-full animate-spin-slow" />
-          <div className="absolute top-24 right-24 w-24 h-24 border border-cyan-500/20 rounded-full animate-spin-reverse" />
+          {/* Animated geometric shapes */}
+          <div className="absolute top-20 right-20 w-40 h-40 border border-white/10 rounded-full animate-spin-slow" />
+          <div className="absolute top-24 right-24 w-32 h-32 border border-cyan-500/20 rounded-full animate-spin-reverse" />
+          <div className="absolute bottom-32 left-20 w-24 h-24 border border-blue-400/20 rounded-lg animate-spin-slow rotate-45" style={{ animationDuration: '25s' }} />
+          <div className="absolute top-1/3 right-10 w-16 h-16 border-2 border-cyan-400/10 animate-pulse-scale" />
 
-          {/* Moving particles */}
-          <div className="absolute top-1/3 left-10 w-2 h-2 bg-cyan-400/60 rounded-full animate-particle" />
-          <div className="absolute top-1/2 left-1/4 w-1.5 h-1.5 bg-blue-400/60 rounded-full animate-particle-delayed" />
-          <div className="absolute bottom-1/4 left-1/3 w-2 h-2 bg-white/40 rounded-full animate-particle-slow" />
-          <div className="absolute top-2/3 right-1/4 w-1.5 h-1.5 bg-cyan-300/50 rounded-full animate-particle" style={{ animationDelay: '2s' }} />
+          {/* Floating lines */}
+          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent animate-slide-right" />
+          <div className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-slide-left" />
+          <div className="absolute top-1/2 left-0 w-2/3 h-px bg-gradient-to-r from-cyan-500/30 to-transparent animate-slide-right" style={{ animationDelay: '2s' }} />
 
-          {/* Gradient overlay sweep */}
+          {/* Pulsing dots grid */}
+          <div className="absolute top-20 left-20 w-2 h-2 bg-cyan-400/40 rounded-full animate-pulse-dot" />
+          <div className="absolute top-40 left-32 w-1.5 h-1.5 bg-blue-400/40 rounded-full animate-pulse-dot" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute top-60 left-16 w-2 h-2 bg-white/30 rounded-full animate-pulse-dot" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-40 left-40 w-1.5 h-1.5 bg-cyan-300/40 rounded-full animate-pulse-dot" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute bottom-20 left-24 w-2 h-2 bg-indigo-400/40 rounded-full animate-pulse-dot" style={{ animationDelay: '2s' }} />
+
+          {/* Rising particles */}
+          <div className="absolute bottom-0 left-1/4 w-1 h-1 bg-cyan-400/60 rounded-full animate-rise" />
+          <div className="absolute bottom-0 left-1/3 w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-rise" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-0 left-1/2 w-1 h-1 bg-white/40 rounded-full animate-rise" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-0 left-2/3 w-1.5 h-1.5 bg-cyan-300/50 rounded-full animate-rise" style={{ animationDelay: '3s' }} />
+          <div className="absolute bottom-0 left-3/4 w-1 h-1 bg-indigo-400/50 rounded-full animate-rise" style={{ animationDelay: '4s' }} />
+
+          {/* Gradient sweeps */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-sweep" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-sweep-vertical" />
+
+          {/* Corner accents */}
+          <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-cyan-500/10 to-transparent" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-500/10 to-transparent" />
         </div>
 
         {/* Content */}
@@ -170,37 +192,43 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-[42%] flex items-center justify-center bg-gradient-to-br from-slate-50 to-white p-6 lg:p-8">
-        <div className="w-full max-w-sm">
+      <div className="w-full lg:w-[42%] flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 lg:p-8 relative overflow-hidden">
+        {/* Subtle background elements */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-1/4 right-1/4 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 left-1/4 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl" />
+        </div>
+
+        <div className="w-full max-w-sm relative z-10">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-6">
             <div className="inline-flex items-center gap-2 mb-2">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+              <div className="p-2 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg">
                 <Factory className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900">ProdLink</h1>
+              <h1 className="text-xl font-bold text-white">ProdLink</h1>
             </div>
           </div>
 
           {/* Welcome Text */}
           <div className="mb-5">
-            <h2 className="text-xl font-bold text-slate-900 mb-1">
+            <h2 className="text-xl font-bold text-white mb-1">
               {isSignUp ? 'Create Account' : 'Welcome back'}
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-400">
               {isSignUp ? 'Start your production journey' : 'Enter your credentials to continue'}
             </p>
           </div>
 
           {/* Error/Success Messages */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm backdrop-blur-sm">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-600 text-sm">
+            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm backdrop-blur-sm">
               {success}
             </div>
           )}
@@ -210,7 +238,7 @@ export default function LoginPage() {
             {isSignUp && (
               <div className="relative">
                 <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                  <User className="w-4 h-4 text-slate-400" />
+                  <User className="w-4 h-4 text-slate-500" />
                 </div>
                 <input
                   id="fullName"
@@ -219,7 +247,7 @@ export default function LoginPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="w-full ps-10 pe-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-slate-50"
+                  className="w-full ps-10 pe-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 transition-all disabled:bg-slate-800/30 disabled:text-slate-500"
                   placeholder="Full name"
                 />
               </div>
@@ -227,7 +255,7 @@ export default function LoginPage() {
 
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <Mail className="w-4 h-4 text-slate-400" />
+                <Mail className="w-4 h-4 text-slate-500" />
               </div>
               <input
                 id="email"
@@ -236,32 +264,39 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                className="w-full ps-10 pe-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-slate-50"
+                className="w-full ps-10 pe-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 transition-all disabled:bg-slate-800/30 disabled:text-slate-500"
                 placeholder="Email address"
               />
             </div>
 
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <Lock className="w-4 h-4 text-slate-400" />
+                <Lock className="w-4 h-4 text-slate-500" />
               </div>
               <input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
                 disabled={isLoading}
-                className="w-full ps-10 pe-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-slate-50"
+                className="w-full ps-10 pe-10 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 transition-all disabled:bg-slate-800/30 disabled:text-slate-500"
                 placeholder="Password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 end-0 flex items-center pe-3 text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold rounded-lg shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white text-sm font-semibold rounded-lg shadow-lg shadow-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
             >
               {isLoading ? (
                 <>
@@ -285,28 +320,28 @@ export default function LoginPage() {
                 setError(null)
                 setSuccess(null)
               }}
-              className="text-sm text-slate-500 hover:text-blue-600 transition-colors"
+              className="text-sm text-slate-400 hover:text-white transition-colors"
             >
               {isSignUp ? (
-                <>Have an account? <span className="font-semibold text-blue-600">Sign in</span></>
+                <>Have an account? <span className="font-semibold text-cyan-400">Sign in</span></>
               ) : (
-                <>Need an account? <span className="font-semibold text-blue-600">Sign up</span></>
+                <>Need an account? <span className="font-semibold text-cyan-400">Sign up</span></>
               )}
             </button>
           </div>
 
           {/* Divider */}
           <div className="my-4 flex items-center gap-3">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-xs text-slate-400">or</span>
-            <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex-1 h-px bg-slate-700" />
+            <span className="text-xs text-slate-500">or</span>
+            <div className="flex-1 h-px bg-slate-700" />
           </div>
 
           {/* Google Sign In */}
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:bg-slate-50 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-300 font-medium hover:bg-slate-700/50 hover:border-slate-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-600 disabled:bg-slate-800/30 disabled:cursor-not-allowed transition-all"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -318,7 +353,7 @@ export default function LoginPage() {
           </button>
 
           {/* Footer */}
-          <p className="mt-4 text-center text-xs text-slate-400">
+          <p className="mt-4 text-center text-xs text-slate-500">
             First user becomes admin automatically
           </p>
         </div>
