@@ -3,8 +3,12 @@ const fs = require('fs');
 const path = require('path');
 
 async function runMigration() {
-  const connectionString = process.env.DATABASE_URL ||
-    'postgresql://neondb_owner:npg_Qh1ZvFbozf3u@ep-dark-water-aha1acom-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require';
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    console.error('ERROR: DATABASE_URL environment variable is required');
+    process.exit(1);
+  }
 
   const client = new Client({
     connectionString,
