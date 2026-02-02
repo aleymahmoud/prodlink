@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Button } from '@/shared/components/ui/Button'
+import { Portal } from '@/shared/components/ui/Portal'
 import { X, Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react'
 
 interface UploadModalProps {
@@ -111,14 +112,15 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div
-          className="fixed inset-0 bg-black/50 transition-opacity"
-          onClick={onClose}
-        />
+    <Portal>
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div
+            className="fixed inset-0 bg-black/50 transition-opacity"
+            onClick={onClose}
+          />
 
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+          <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -254,9 +256,10 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Portal>
   )
 }

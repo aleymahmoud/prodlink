@@ -34,15 +34,16 @@ export default function DashboardPage() {
   })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [loadingStats, setLoadingStats] = useState(true)
+  const [hasFetched, setHasFetched] = useState(false)
 
   useEffect(() => {
-    if (user) {
+    if (user && !hasFetched) {
       fetchDashboardData()
+      setHasFetched(true)
     }
-  }, [user])
+  }, [user, hasFetched])
 
   const fetchDashboardData = async () => {
-    setLoadingStats(true)
     try {
       const response = await fetch('/api/dashboard')
       if (!response.ok) throw new Error('Failed to fetch dashboard data')
