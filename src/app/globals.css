@@ -61,3 +61,73 @@ body {
 .duration-500 {
   animation-duration: 500ms;
 }
+
+/* Login page background animations */
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(10px, -20px) scale(1.05); }
+  50% { transform: translate(-5px, 10px) scale(0.95); }
+  75% { transform: translate(-15px, -10px) scale(1.02); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes particle {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) translateX(30px); opacity: 0; }
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 10s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-float-slow {
+  animation: float 12s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 15s linear infinite;
+}
+
+.animate-particle {
+  animation: particle 6s ease-in-out infinite;
+}
+
+.animate-particle-delayed {
+  animation: particle 8s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+.animate-particle-slow {
+  animation: particle 10s ease-in-out infinite;
+  animation-delay: 5s;
+}
+
+.animate-sweep {
+  animation: sweep 8s ease-in-out infinite;
+}
