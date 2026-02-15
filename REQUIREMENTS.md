@@ -4,7 +4,7 @@
 **Client:** Pastries Factory
 **Date:** 2026-01-24
 **Status:** In Development
-**Last Updated:** 2026-01-25
+**Last Updated:** 2026-02-03
 
 ---
 
@@ -14,18 +14,24 @@
 |-------|--------|----------|
 | Phase 1 - Foundation | ✅ Complete | 100% |
 | Phase 2 - Core Data Entry | ✅ Complete | 100% |
-| Phase 3 - Waste Workflow | 🔄 In Progress | 30% |
-| Phase 4 - Dashboard & Polish | 🔄 Partial | 60% |
+| Phase 3 - Waste Workflow | ✅ Complete | 100% |
+| Phase 4 - Dashboard & Polish | 🔄 Partial | 80% |
 
-**Recent Updates (2026-01-25):**
+**Recent Updates (2026-02-03):**
+- **Database Migration:** Migrated from Supabase to Neon PostgreSQL
+- **Auth Migration:** Migrated from Supabase Auth to NextAuth.js v5
+- **ORM:** Using Drizzle ORM with @neondatabase/serverless driver
+- Added user profile page with edit functionality
+- Redesigned sidebar with user menu dropdown
+- Fixed modal display issues with Portal component
 - Added `line_id` to products table (products now belong to specific lines)
-- Redesigned Production Entry page with:
-  - Line Type filter (Finished / Semi-Finished)
-  - Production Line dropdown
-  - Products table showing only products for selected line
-  - Inline quantity input with unit of measure dropdown
-  - Batch save functionality for multiple products
-- Updated Admin Products page with line assignment and filtering
+- Redesigned Production Entry page with line type filter, inline quantity entry
+- **Phase 3:** Added approval levels admin page with CRUD operations
+- **Phase 3:** Added sequential/parallel approval type configuration
+- **Phase 3:** Added approver assignment UI to approval levels
+- **Phase 3:** Implemented multi-level approval workflow (level-based progression)
+- **Phase 3:** Added PDF export for waste reports with filters
+- **Phase 3:** Added form approval tracking (app approved + physical form signed)
 
 ---
 
@@ -181,15 +187,17 @@ Product fields: Name, Code/SKU, Category, Unit of Measure
 |-------|------------|
 | **Frontend** | Next.js 14+ (React) with TypeScript |
 | **Backend** | Next.js API Routes (serverless) |
-| **Database** | PostgreSQL (via Supabase) |
-| **Authentication** | Supabase Auth (Google + email/password) |
+| **Database** | Neon PostgreSQL (serverless) |
+| **ORM** | Drizzle ORM with @neondatabase/serverless |
+| **Authentication** | NextAuth.js v5 (Credentials + Google) |
 | **Hosting** | Vercel |
-| **Database Hosting** | Supabase |
+| **Database Hosting** | Neon |
 
 ### 5.5 Infrastructure
 - No offline capability (requires internet connection)
 - Vercel for frontend and API hosting
-- Supabase for database and authentication
+- Neon for serverless PostgreSQL database
+- NextAuth.js for authentication (JWT strategy)
 
 ### 5.6 Browser Support
 - Modern browsers (Chrome, Safari, Firefox, Edge)
@@ -233,18 +241,24 @@ For the fastest path to a working app:
 - [x] **NEW: Production entry with line type filter**
 - [x] **NEW: Inline quantity entry with unit of measure dropdown**
 
-### Phase 3 - Waste Workflow 🔄 IN PROGRESS
+### Phase 3 - Waste Workflow ✅ COMPLETE
 - [x] Basic approval status tracking (pending/approved/rejected)
 - [x] Approvals page for viewing waste entries
-- [ ] Multi-level approval workflow configuration
-- [ ] Sequential/parallel approval support
-- [ ] PDF generator for ISO compliance
-- [ ] Form approval tracking per line
+- [x] Multi-level approval workflow configuration (admin UI)
+- [x] Sequential/parallel approval type per level
+- [x] Approver assignment to levels
+- [x] Multi-level approval flow implementation (actual workflow)
+- [x] PDF generator for ISO compliance (export with filters)
+- [x] Form approval tracking per line (app approved + form signed)
 
 ### Phase 4 - Dashboard & Polish 🔄 PARTIAL
 - [x] Basic dashboard with stats (today's production, pending approvals, waste, reprocessing)
 - [x] Bilingual support (Arabic/English) with language switcher
-- [x] Observability dashboard (Vercel deployments, error logs)
+- [x] Observability dashboard (Vercel deployments)
+- [x] **Database migration from Supabase to Neon PostgreSQL**
+- [x] **Auth migration from Supabase Auth to NextAuth.js v5**
+- [x] User profile page with edit functionality
+- [x] Redesigned sidebar with user menu
 - [ ] PWA installation manifest
 - [ ] Push notifications for approvers
 

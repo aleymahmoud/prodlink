@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/ui/Button'
 import { useTranslation } from '@/shared/i18n'
-import { Plus, Edit, Trash2, Upload, Filter } from 'lucide-react'
+import { Plus, Edit, Trash2, Upload, Filter, Download } from 'lucide-react'
 import { ProductModal } from './ProductModal'
 import { UploadModal } from './UploadModal'
 
@@ -115,6 +115,25 @@ export default function ProductsPage() {
     }
   }
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const res = await fetch('/api/products/template')
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'ProdLink-Products-Template.xlsx'
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error downloading template:', error)
+    }
+  }
+
   const filteredProducts = selectedLineId
     ? products.filter(p => p.line_id === selectedLineId)
     : products
@@ -127,9 +146,13 @@ export default function ProductsPage() {
             {t('admin.products.description')}
           </p>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleDownloadTemplate}>
+              <Download className="w-4 h-4 me-2" />
+              Template
+            </Button>
             <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
               <Upload className="w-4 h-4 me-2" />
-              {t('admin.products.importCSV')}
+              Import Excel
             </Button>
             <Button onClick={handleCreate}>
               <Plus className="w-4 h-4 me-2" />
@@ -176,7 +199,7 @@ export default function ProductsPage() {
               <div className="flex justify-center gap-4">
                 <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
                   <Upload className="w-4 h-4 me-2" />
-                  {t('admin.products.importFromCSV')}
+                  Import from Excel
                 </Button>
                 <Button onClick={handleCreate}>
                   <Plus className="w-4 h-4 me-2" />

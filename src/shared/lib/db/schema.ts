@@ -43,6 +43,7 @@ export const profiles = pgTable('profiles', {
 export const lines = pgTable('lines', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  nameEn: text('name_en'),
   code: text('code').notNull().unique(),
   type: lineTypeEnum('type').notNull().default('finished'),
   formApproverId: uuid('form_approver_id').references(() => profiles.id, { onDelete: 'set null' }),

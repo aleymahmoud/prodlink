@@ -5,7 +5,8 @@ import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
 import { useUser } from '@/features/auth/hooks/useUser'
 import { useTranslation } from '@/shared/i18n'
-import { Plus, X, Trash2, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
+import { Plus, X, Trash2, Clock, CheckCircle, XCircle, AlertTriangle, FileText } from 'lucide-react'
+import Link from 'next/link'
 
 interface Line { id: string; name: string; code: string; type: string; is_active: boolean }
 interface Product { id: string; name: string; code: string; unit_of_measure: string; is_active: boolean }
@@ -25,6 +26,7 @@ export default function WastePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [reasons, setReasons] = useState<Reason[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasFetched, setHasFetched] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +39,12 @@ export default function WastePage() {
   const { user, profile } = useUser()
   const { t } = useTranslation()
 
-  useEffect(() => { if (user) fetchData() }, [user])
+  useEffect(() => {
+    if (user && !hasFetched) {
+      fetchData()
+      setHasFetched(true)
+    }
+  }, [user, hasFetched])
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -89,9 +96,19 @@ export default function WastePage() {
     <div>
       <Header title={t('waste.title')} subtitle={t('waste.description')}
         icon={<div className="p-2.5 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg shadow-red-500/20"><Trash2 className="w-5 h-5 text-white" /></div>}
-        actions={<Button onClick={() => setShowForm(!showForm)} className={`rounded-xl ${showForm ? '' : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/20'}`} variant={showForm ? 'outline' : 'primary'}>
-          {showForm ? <><X className="w-4 h-4 me-2" />{t('common.cancel')}</> : <><Plus className="w-4 h-4 me-2" />{t('waste.newEntry')}</>}
-        </Button>}
+        actions={
+          <div className="flex gap-2">
+            <Link href="/waste/export">
+              <Button variant="outline" className="rounded-xl">
+                <FileText className="w-4 h-4 me-2" />
+                Export PDF
+              </Button>
+            </Link>
+            <Button onClick={() => setShowForm(!showForm)} className={`rounded-xl ${showForm ? '' : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/20'}`} variant={showForm ? 'outline' : 'primary'}>
+              {showForm ? <><X className="w-4 h-4 me-2" />{t('common.cancel')}</> : <><Plus className="w-4 h-4 me-2" />{t('waste.newEntry')}</>}
+            </Button>
+          </div>
+        }
       />
 
       <div className="p-6 space-y-6">

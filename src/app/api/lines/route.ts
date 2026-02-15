@@ -14,6 +14,7 @@ export async function GET() {
       .select({
         id: lines.id,
         name: lines.name,
+        nameEn: lines.nameEn,
         code: lines.code,
         type: lines.type,
         formApproverId: lines.formApproverId,
@@ -33,6 +34,7 @@ export async function GET() {
     // Transform to match expected format
     const result = allLines.map(line => ({
       ...line,
+      name_en: line.nameEn,
       form_approver_id: line.formApproverId,
       is_active: line.isActive,
       created_at: line.createdAt?.toISOString(),
@@ -59,10 +61,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, code, type, form_approver_id, is_active } = body;
+    const { name, name_en, code, type, form_approver_id, is_active } = body;
 
     const [newLine] = await db.insert(lines).values({
       name,
+      nameEn: name_en || null,
       code,
       type: type || 'finished',
       formApproverId: form_approver_id || null,
@@ -71,6 +74,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ...newLine,
+      name_en: newLine.nameEn,
       form_approver_id: newLine.formApproverId,
       is_active: newLine.isActive,
       created_at: newLine.createdAt?.toISOString(),
@@ -90,11 +94,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, name, code, type, form_approver_id, is_active } = body;
+    const { id, name, name_en, code, type, form_approver_id, is_active } = body;
 
     const [updated] = await db.update(lines)
       .set({
         name,
+        nameEn: name_en !== undefined ? (name_en || null) : undefined,
         code,
         type,
         formApproverId: form_approver_id || null,
@@ -105,6 +110,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       ...updated,
+      name_en: updated.nameEn,
       form_approver_id: updated.formApproverId,
       is_active: updated.isActive,
       created_at: updated.createdAt?.toISOString(),

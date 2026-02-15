@@ -15,51 +15,20 @@ interface ParsedProduct {
   code: string
   category: string | null
   unit_of_measure: string
+  line_id: string | null
+  line_display: string
 }
 
 export function UploadModal({ onClose, onSave }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null)
   const [parsedData, setParsedData] = useState<ParsedProduct[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isParsing, setIsParsing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const parseCSV = (text: string): ParsedProduct[] => {
-    const lines = text.trim().split('\n')
-    if (lines.length < 2) {
-      throw new Error('CSV file must have a header row and at least one data row')
-    }
-
-    const headers = lines[0].toLowerCase().split(',').map((h) => h.trim())
-
-    const nameIndex = headers.findIndex((h) => h.includes('name'))
-    const codeIndex = headers.findIndex((h) => h.includes('code') || h.includes('sku'))
-    const categoryIndex = headers.findIndex((h) => h.includes('category'))
-    const unitIndex = headers.findIndex((h) => h.includes('unit'))
-
-    if (nameIndex === -1 || codeIndex === -1) {
-      throw new Error('CSV must have "name" and "code" (or "sku") columns')
-    }
-
-    const products: ParsedProduct[] = []
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map((v) => v.trim().replace(/^["']|["']$/g, ''))
-
-      if (values[nameIndex] && values[codeIndex]) {
-        products.push({
-          name: values[nameIndex],
-          code: values[codeIndex],
-          category: categoryIndex !== -1 ? values[categoryIndex] || null : null,
-          unit_of_measure: unitIndex !== -1 ? values[unitIndex] || 'unit' : 'unit',
-        })
-      }
-    }
-
-    return products
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (!selectedFile) return
 
@@ -67,18 +36,29 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
     setError(null)
     setSuccess(null)
     setParsedData([])
+    setIsParsing(true)
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string
-        const products = parseCSV(text)
-        setParsedData(products)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to parse CSV')
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+
+      const res = await fetch('/api/products/parse-excel', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to parse file')
       }
+
+      const data = await res.json()
+      setParsedData(data.products)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to parse file')
+    } finally {
+      setIsParsing(false)
     }
-    reader.readAsText(selectedFile)
   }
 
   const handleImport = async () => {
@@ -124,7 +104,7 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
           <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Import Products from CSV
+                Import Products from Excel
               </h3>
               <button
                 type="button"
@@ -137,14 +117,14 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
 
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
               </div>
             )}
 
             {success && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
                 {success}
               </div>
             )}
@@ -154,7 +134,7 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".csv"
+                  accept=".xlsx,.xls"
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -163,6 +143,7 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
                   <div className="flex items-center justify-center gap-2 text-gray-700">
                     <FileText className="w-5 h-5" />
                     <span>{file.name}</span>
+                    {isParsing && <span className="text-sm text-gray-500">Parsing...</span>}
                     <button
                       onClick={() => {
                         setFile(null)
@@ -180,33 +161,25 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
                   <div>
                     <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                     <p className="text-sm text-gray-600 mb-2">
-                      Click to upload or drag and drop
+                      Upload the filled Excel template
                     </p>
                     <Button
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      Select CSV File
+                      Select Excel File
                     </Button>
                   </div>
                 )}
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4 text-sm">
-                <p className="font-medium text-gray-700 mb-2">CSV Format:</p>
-                <p className="text-gray-600 mb-2">
-                  Required columns: <code className="bg-gray-200 px-1 rounded">name</code>,{' '}
-                  <code className="bg-gray-200 px-1 rounded">code</code> (or sku)
-                </p>
-                <p className="text-gray-600">
-                  Optional columns: <code className="bg-gray-200 px-1 rounded">category</code>,{' '}
-                  <code className="bg-gray-200 px-1 rounded">unit_of_measure</code>
-                </p>
-                <div className="mt-2 bg-white p-2 rounded border font-mono text-xs">
-                  name,code,category,unit_of_measure<br />
-                  Chocolate Croissant,PRD-001,Pastries,unit<br />
-                  Plain Croissant,PRD-002,Pastries,unit
-                </div>
+                <p className="font-medium text-gray-700 mb-2">How to import:</p>
+                <ol className="text-gray-600 space-y-1 list-decimal list-inside">
+                  <li>Download the template using the &quot;Template&quot; button</li>
+                  <li>Fill in the product data (use dropdown lists for Line and Unit)</li>
+                  <li>Upload the filled file here</li>
+                </ol>
               </div>
 
               {parsedData.length > 0 && (
@@ -218,6 +191,7 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
                     <table className="min-w-full text-sm">
                       <thead className="bg-gray-50 sticky top-0">
                         <tr>
+                          <th className="px-3 py-2 text-left">Line</th>
                           <th className="px-3 py-2 text-left">Name</th>
                           <th className="px-3 py-2 text-left">Code</th>
                           <th className="px-3 py-2 text-left">Category</th>
@@ -227,6 +201,7 @@ export function UploadModal({ onClose, onSave }: UploadModalProps) {
                       <tbody className="divide-y">
                         {parsedData.slice(0, 10).map((p, i) => (
                           <tr key={i}>
+                            <td className="px-3 py-2">{p.line_display || '-'}</td>
                             <td className="px-3 py-2">{p.name}</td>
                             <td className="px-3 py-2">{p.code}</td>
                             <td className="px-3 py-2">{p.category || '-'}</td>

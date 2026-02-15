@@ -13,6 +13,7 @@ import {
   List,
   Activity,
   ChevronRight,
+  GitBranch,
 } from 'lucide-react'
 
 interface TabItem {
@@ -27,6 +28,7 @@ const tabs: TabItem[] = [
   { key: 'lines', href: '/admin/lines', icon: Factory },
   { key: 'products', href: '/admin/products', icon: Package },
   { key: 'reasons', href: '/admin/reasons', icon: List },
+  { key: 'approvalLevels', href: '/admin/approval-levels', icon: GitBranch },
   { key: 'observability', href: '/admin/observability', icon: Activity },
 ]
 

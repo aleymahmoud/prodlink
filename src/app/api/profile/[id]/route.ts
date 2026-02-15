@@ -34,3 +34,50 @@ export async function GET(
     );
   }
 }
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    // Users can only update their own profile
+    if (session.user.id !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { full_name } = body;
+
+    if (!full_name || typeof full_name !== 'string') {
+      return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
+    }
+
+    const [updated] = await db
+      .update(profiles)
+      .set({
+        fullName: full_name.trim(),
+        updatedAt: new Date(),
+      })
+      .where(eq(profiles.id, id))
+      .returning();
+
+    if (!updated) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update profile' },
+      { status: 500 }
+    );
+  }
+}

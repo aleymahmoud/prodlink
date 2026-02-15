@@ -18,11 +18,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Transform to match schema
-    const productsToInsert = productList.map(p => ({
+    const productsToInsert = productList.map((p: { name: string; code: string; category?: string; unit_of_measure?: string; line_id?: string }) => ({
       name: p.name,
       code: p.code,
       category: p.category || null,
       unitOfMeasure: p.unit_of_measure || 'unit',
+      lineId: p.line_id || null,
     }));
 
     // Insert products one by one with upsert behavior
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
               name: product.name,
               category: product.category,
               unitOfMeasure: product.unitOfMeasure,
+              lineId: product.lineId,
               updatedAt: new Date(),
             },
           });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, wasteEntries, products, lines, profiles, reasons } from '@/shared/lib/db';
-import { eq, desc, gte, and } from 'drizzle-orm';
+import { db, wasteEntries, products, lines, profiles, reasons, approvalLevels, wasteApprovals } from '@/shared/lib/db';
+import { eq, desc, and, asc } from 'drizzle-orm';
 import { auth } from '@/auth';
 
 export async function GET(request: NextRequest) {
@@ -114,6 +114,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { line_id, product_id, quantity, unit_of_measure, batch_number, reason_id, notes } = body;
 
+    // Get all active approval levels
+    const activelevels = await db
+      .select()
+      .from(approvalLevels)
+      .where(eq(approvalLevels.isActive, true))
+      .orderBy(asc(approvalLevels.levelOrder));
+
+    // Create the waste entry
     const [newEntry] = await db.insert(wasteEntries).values({
       lineId: line_id,
       productId: product_id,
@@ -123,7 +131,20 @@ export async function POST(request: NextRequest) {
       reasonId: reason_id,
       notes,
       createdBy: session.user.id,
+      currentApprovalLevel: activelevels.length > 0 ? activelevels[0].levelOrder : 1,
+      approvalStatus: 'pending',
     }).returning();
+
+    // Create wasteApprovals records for each approval level
+    if (activelevels.length > 0) {
+      const approvalRecords = activelevels.map(level => ({
+        wasteEntryId: newEntry.id,
+        approvalLevelId: level.id,
+        status: 'pending' as const,
+      }));
+
+      await db.insert(wasteApprovals).values(approvalRecords);
+    }
 
     return NextResponse.json({
       id: newEntry.id,
@@ -135,6 +156,7 @@ export async function POST(request: NextRequest) {
       reason_id: newEntry.reasonId,
       notes: newEntry.notes,
       approval_status: newEntry.approvalStatus,
+      current_approval_level: newEntry.currentApprovalLevel,
       created_by: newEntry.createdBy,
       created_at: newEntry.createdAt?.toISOString(),
     });

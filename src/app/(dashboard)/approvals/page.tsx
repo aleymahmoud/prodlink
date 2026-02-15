@@ -5,13 +5,18 @@ import { useUser } from '@/features/auth/hooks/useUser'
 import { useTranslation } from '@/shared/i18n'
 import { Header } from '@/shared/components/layout/Header'
 import { Button } from '@/shared/components/ui/Button'
-import { Check, X, Clock, AlertCircle, ClipboardCheck, Filter, CheckCircle, XCircle } from 'lucide-react'
+import { Check, X, Clock, AlertCircle, ClipboardCheck, Filter, CheckCircle, XCircle, ArrowRight, FileCheck, FileX } from 'lucide-react'
 
 interface WasteEntry {
   id: string
   quantity: number
   notes: string | null
   status: 'pending' | 'approved' | 'rejected'
+  current_approval_level: number | null
+  total_levels: number
+  app_approved: boolean
+  form_approved: boolean
+  can_approve: boolean
   created_at: string
   line: { name: string } | null
   product: { name: string } | null
@@ -94,6 +99,29 @@ export default function ApprovalsPage() {
     setProcessingId(null)
   }
 
+  const handleFormApproval = async (id: string, formApproved: boolean) => {
+    if (!profile) return
+    setProcessingId(id)
+
+    try {
+      const res = await fetch('/api/waste/form-approval', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, form_approved: formApproved }),
+      })
+
+      if (res.ok) {
+        fetchEntries()
+      } else {
+        const data = await res.json()
+        console.error('Error:', data.error)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+    setProcessingId(null)
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA' : 'en-US', {
@@ -105,21 +133,42 @@ export default function ApprovalsPage() {
     }).format(date)
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (entry: WasteEntry) => {
+    const { status, current_approval_level, total_levels } = entry
     switch (status) {
       case 'pending':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
-            <Clock className="w-3.5 h-3.5" />
-            {t('waste.status.pending')}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 border border-amber-100">
+              <Clock className="w-3.5 h-3.5" />
+              {t('waste.status.pending')}
+            </span>
+            {total_levels > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
+                Level {current_approval_level}/{total_levels}
+              </span>
+            )}
+          </div>
         )
       case 'approved':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
-            <CheckCircle className="w-3.5 h-3.5" />
-            {t('waste.status.approved')}
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
+              <CheckCircle className="w-3.5 h-3.5" />
+              App {t('waste.status.approved')}
+            </span>
+            {entry.form_approved ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-blue-700 border border-blue-100">
+                <FileCheck className="w-3.5 h-3.5" />
+                Form Signed
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-orange-50 text-orange-700 border border-orange-100">
+                <FileX className="w-3.5 h-3.5" />
+                Form Pending
+              </span>
+            )}
+          </div>
         )
       case 'rejected':
         return (
@@ -244,7 +293,7 @@ export default function ApprovalsPage() {
                         <h3 className="text-lg font-semibold text-slate-900">
                           {entry.product?.name}
                         </h3>
-                        {getStatusBadge(entry.status)}
+                        {getStatusBadge(entry)}
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -286,15 +335,24 @@ export default function ApprovalsPage() {
                       </p>
                     </div>
 
-                    {canApprove && entry.status === 'pending' && (
+                    {entry.can_approve && entry.status === 'pending' && (
                       <div className="flex gap-2 lg:flex-col xl:flex-row">
                         <Button
                           onClick={() => handleApprove(entry.id)}
                           disabled={processingId === entry.id}
                           className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20"
                         >
-                          <Check className="w-4 h-4 me-2" />
-                          {t('approvals.approve')}
+                          {entry.current_approval_level && entry.total_levels > 0 && entry.current_approval_level < entry.total_levels ? (
+                            <>
+                              <ArrowRight className="w-4 h-4 me-2" />
+                              Approve to L{(entry.current_approval_level || 0) + 1}
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-4 h-4 me-2" />
+                              {t('approvals.approve')}
+                            </>
+                          )}
                         </Button>
                         <Button
                           variant="outline"
@@ -306,6 +364,17 @@ export default function ApprovalsPage() {
                           {t('approvals.reject')}
                         </Button>
                       </div>
+                    )}
+
+                    {entry.status === 'approved' && entry.app_approved && !entry.form_approved && (
+                      <Button
+                        onClick={() => handleFormApproval(entry.id, true)}
+                        disabled={processingId === entry.id}
+                        className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/20"
+                      >
+                        <FileCheck className="w-4 h-4 me-2" />
+                        Mark Form Signed
+                      </Button>
                     )}
                   </div>
                 </div>

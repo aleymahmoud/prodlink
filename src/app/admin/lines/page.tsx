@@ -11,6 +11,7 @@ type LineType = 'finished' | 'semi-finished'
 interface Line {
   id: string
   name: string
+  name_en: string | null
   code: string
   type: LineType
   is_active: boolean
@@ -114,6 +115,9 @@ export default function LinesPage() {
                     {t('admin.lines.name')}
                   </th>
                   <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    English Name
+                  </th>
+                  <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('admin.lines.code')}
                   </th>
                   <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -134,6 +138,9 @@ export default function LinesPage() {
                       <div className="text-sm font-medium text-gray-900">
                         {line.name}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{line.name_en || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{line.code}</div>

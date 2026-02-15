@@ -151,6 +151,7 @@
       "lines": "Lines",
       "products": "Products",
       "reasons": "Reasons",
+      "approvalLevels": "Approval Levels",
       "observability": "Observability"
     },
     "users": {

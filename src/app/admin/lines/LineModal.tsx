@@ -10,6 +10,7 @@ type LineType = 'finished' | 'semi-finished'
 interface Line {
   id: string
   name: string
+  name_en: string | null
   code: string
   type: LineType
 }
@@ -20,14 +21,33 @@ interface LineModalProps {
   onSave: () => void
 }
 
+function generateCode(lineName: string): string {
+  if (!lineName.trim()) return ''
+  const words = lineName.trim().split(/\s+/)
+  // Take first letter of each word, uppercase
+  const prefix = words.map(w => w[0]).join('').toUpperCase()
+  // Add number suffix based on digits found in name, or default
+  const numbers = lineName.match(/\d+/)
+  const suffix = numbers ? numbers[0].padStart(2, '0') : '01'
+  return `${prefix}-${suffix}`
+}
+
 export function LineModal({ line, onClose, onSave }: LineModalProps) {
   const [name, setName] = useState(line?.name || '')
+  const [nameEn, setNameEn] = useState(line?.name_en || '')
   const [code, setCode] = useState(line?.code || '')
   const [type, setType] = useState<LineType>(line?.type || 'finished')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const isEditing = !!line
+
+  const handleNameEnChange = (value: string) => {
+    setNameEn(value)
+    if (!isEditing) {
+      setCode(generateCode(value))
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,8 +58,8 @@ export function LineModal({ line, onClose, onSave }: LineModalProps) {
       const url = '/api/lines'
       const method = isEditing ? 'PUT' : 'POST'
       const body = isEditing
-        ? { id: line.id, name, code, type }
-        : { name, code, type }
+        ? { id: line.id, name, name_en: nameEn, code, type }
+        : { name, name_en: nameEn, code, type }
 
       const res = await fetch(url, {
         method,
@@ -101,6 +121,21 @@ export function LineModal({ line, onClose, onSave }: LineModalProps) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    placeholder="e.g., خط الكرواسون 1"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    English Name
+                    {!isEditing && <span className="text-xs text-gray-400 ms-2">(used for code generation)</span>}
+                  </label>
+                  <input
+                    type="text"
+                    value={nameEn}
+                    onChange={(e) => handleNameEnChange(e.target.value)}
+                    required
                     placeholder="e.g., Croissant Line 1"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -109,6 +144,7 @@ export function LineModal({ line, onClose, onSave }: LineModalProps) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Line Code
+                    {!isEditing && <span className="text-xs text-gray-400 ms-2">(auto-generated)</span>}
                   </label>
                   <input
                     type="text"
@@ -116,8 +152,12 @@ export function LineModal({ line, onClose, onSave }: LineModalProps) {
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     required
                     placeholder="e.g., CL-01"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                    readOnly={!isEditing}
                   />
+                  {!isEditing && (
+                    <p className="mt-1 text-xs text-gray-500">Code is generated from the English name</p>
+                  )}
                 </div>
 
                 <div>
