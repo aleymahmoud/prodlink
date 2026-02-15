@@ -6,7 +6,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/api/auth'];
+  const publicRoutes = ['/login', '/api/auth', '/api/health'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
   // If not logged in and trying to access protected route
