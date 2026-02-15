@@ -10,6 +10,7 @@ type UserRole = 'admin' | 'engineer' | 'approver' | 'viewer'
 interface User {
   id: string
   email: string
+  username: string | null
   full_name: string
   role: UserRole
   is_active: boolean
@@ -31,6 +32,7 @@ interface UserModalProps {
 
 export function UserModal({ user, onClose, onSave }: UserModalProps) {
   const [fullName, setFullName] = useState(user?.full_name || '')
+  const [username, setUsername] = useState(user?.username || '')
   const [email, setEmail] = useState(user?.email || '')
   const [role, setRole] = useState<UserRole>(user?.role || 'engineer')
   const [password, setPassword] = useState('')
@@ -88,6 +90,7 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
           body: JSON.stringify({
             id: user.id,
             full_name: fullName,
+            username: username || null,
             role: role,
             line_ids: selectedLines,
           }),
@@ -110,6 +113,7 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
+            username: username || null,
             password,
             fullName,
             role,
@@ -181,6 +185,19 @@ export function UserModal({ user, onClose, onSave }: UserModalProps) {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
+                    placeholder="Optional - for login without email"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>

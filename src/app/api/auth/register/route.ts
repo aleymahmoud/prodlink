@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, fullName } = await request.json();
+    const { email, username, password, fullName } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       .insert(profiles)
       .values({
         email,
+        username: username || null,
         passwordHash,
         fullName: fullName || email,
         role: isFirstUser ? 'admin' : 'engineer',

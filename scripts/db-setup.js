@@ -23,12 +23,18 @@ async function dbSetup() {
     await client.connect();
     console.log('[db-setup] Connected successfully');
 
-    // --- Run schema migration ---
-    const migrationPath = path.join(__dirname, '..', 'neon', 'migrations', '001_neon_schema.sql');
-    const migrationSql = fs.readFileSync(migrationPath, 'utf8');
-    console.log('[db-setup] Running schema migration...');
-    await client.query(migrationSql);
-    console.log('[db-setup] Schema migration complete');
+    // --- Run all migrations in order ---
+    const migrationsDir = path.join(__dirname, '..', 'neon', 'migrations');
+    const migrationFiles = fs.readdirSync(migrationsDir)
+      .filter(f => f.endsWith('.sql'))
+      .sort();
+
+    for (const file of migrationFiles) {
+      const migrationSql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+      console.log(`[db-setup] Running migration: ${file}`);
+      await client.query(migrationSql);
+    }
+    console.log(`[db-setup] ${migrationFiles.length} migration(s) complete`);
 
     // --- Run seed data ---
     const seedPath = path.join(__dirname, '..', 'neon', 'seed.sql');
@@ -44,16 +50,17 @@ async function dbSetup() {
 
     if (adminCheck.rows.length === 0) {
       const defaultEmail = process.env.ADMIN_EMAIL || 'admin@prodlink.com';
+      const defaultUsername = process.env.ADMIN_USERNAME || 'admin';
       const defaultPassword = process.env.ADMIN_PASSWORD || 'admin123';
       const defaultName = process.env.ADMIN_NAME || 'System Admin';
 
       const passwordHash = await bcrypt.hash(defaultPassword, 12);
 
       await client.query(
-        `INSERT INTO profiles (email, full_name, password_hash, role, is_active)
-         VALUES ($1, $2, $3, 'admin', true)
+        `INSERT INTO profiles (email, username, full_name, password_hash, role, is_active)
+         VALUES ($1, $2, $3, $4, 'admin', true)
          ON CONFLICT (email) DO NOTHING`,
-        [defaultEmail, defaultName, passwordHash]
+        [defaultEmail, defaultUsername, defaultName, passwordHash]
       );
 
       console.log(`[db-setup] Default admin created: ${defaultEmail}`);

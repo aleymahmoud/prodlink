@@ -63,13 +63,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, full_name, password, role, is_active, line_ids } = body;
+    const { email, username, full_name, password, role, is_active, line_ids } = body;
 
     // Hash password if provided
     const passwordHash = password ? await bcrypt.hash(password, 12) : null;
 
     const [newUser] = await db.insert(profiles).values({
       email,
+      username: username || null,
       fullName: full_name,
       passwordHash,
       role: role || 'engineer',
@@ -107,10 +108,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, email, full_name, password, role, is_active, line_ids } = body;
+    const { id, email, username, full_name, password, role, is_active, line_ids } = body;
 
     const updateData: Record<string, unknown> = {
       email,
+      username: username || null,
       fullName: full_name,
       role,
       isActive: is_active,

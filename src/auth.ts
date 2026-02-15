@@ -6,31 +6,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Credentials({
       name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        login: { label: 'Username or Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
+        if (!credentials?.login || !credentials?.password) {
+          throw new Error('Username/email and password are required');
         }
 
-        const email = credentials.email as string;
+        const login = (credentials.login as string).trim();
         const password = credentials.password as string;
 
         // Dynamic imports to avoid loading pg in Edge runtime (middleware)
         const { db, profiles } = await import('@/shared/lib/db');
-        const { eq } = await import('drizzle-orm');
+        const { eq, or } = await import('drizzle-orm');
         const bcrypt = await import('bcryptjs');
 
-        // Find user by email
+        // Find user by email or username
         const [user] = await db
           .select()
           .from(profiles)
-          .where(eq(profiles.email, email))
+          .where(
+            login.includes('@')
+              ? eq(profiles.email, login)
+              : or(eq(profiles.username, login), eq(profiles.email, login))
+          )
           .limit(1);
 
         if (!user) {
-          throw new Error('Invalid email or password');
+          throw new Error('Invalid username/email or password');
         }
 
         if (!user.isActive) {
@@ -44,7 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Verify password
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) {
-          throw new Error('Invalid email or password');
+          throw new Error('Invalid username/email or password');
         }
 
         return {

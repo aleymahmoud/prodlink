@@ -11,6 +11,7 @@ type UserRole = 'admin' | 'engineer' | 'approver' | 'viewer'
 interface User {
   id: string
   email: string
+  username: string | null
   full_name: string
   role: UserRole
   is_active: boolean

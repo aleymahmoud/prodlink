@@ -27,6 +27,7 @@ export const reasonTypeEnum = pgEnum('reason_type', ['waste', 'damage', 'reproce
 export const profiles = pgTable('profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
+  username: text('username').unique(),
   fullName: text('full_name').notNull(),
   passwordHash: text('password_hash'),
   role: userRoleEnum('role').notNull().default('engineer'),

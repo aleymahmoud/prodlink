@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Factory, BarChart3, Shield, Zap, ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 
 function LoginForm() {
-  const [email, setEmail] = useState('')
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -25,7 +25,7 @@ function LoginForm() {
     setSuccess(null)
 
     const result = await signIn('credentials', {
-      email,
+      login,
       password,
       redirect: false,
     })
@@ -50,7 +50,7 @@ function LoginForm() {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, fullName }),
+        body: JSON.stringify({ email: login, password, fullName }),
       })
 
       const data = await response.json()
@@ -249,17 +249,17 @@ function LoginForm() {
 
             <div className="relative">
               <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <Mail className="w-4 h-4 text-slate-500" />
+                <User className="w-4 h-4 text-slate-500" />
               </div>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="login"
+                type="text"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
                 required
                 disabled={isLoading}
                 className="w-full ps-10 pe-4 py-2.5 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/50 transition-all disabled:bg-slate-800/30 disabled:text-slate-500"
-                placeholder="Email address"
+                placeholder={isSignUp ? 'Email address' : 'Username or email'}
               />
             </div>
 
