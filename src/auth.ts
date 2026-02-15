@@ -1,9 +1,5 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import Google from 'next-auth/providers/google';
-import bcrypt from 'bcryptjs';
-import { db, profiles } from '@/shared/lib/db';
-import { eq } from 'drizzle-orm';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -20,6 +16,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const email = credentials.email as string;
         const password = credentials.password as string;
+
+        // Dynamic imports to avoid loading pg in Edge runtime (middleware)
+        const { db, profiles } = await import('@/shared/lib/db');
+        const { eq } = await import('drizzle-orm');
+        const bcrypt = await import('bcryptjs');
 
         // Find user by email
         const [user] = await db
