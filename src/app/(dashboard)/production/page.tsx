@@ -95,7 +95,7 @@ export default function ProductionPage() {
     if (user) {
       fetchData()
     }
-  }, [user])
+  }, [user?.id])
 
   // Reset product entries when line changes
   useEffect(() => {

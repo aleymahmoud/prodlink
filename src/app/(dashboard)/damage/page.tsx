@@ -37,7 +37,7 @@ export default function DamagePage() {
   const { user, profile } = useUser()
   const { t } = useTranslation()
 
-  useEffect(() => { if (user) fetchData() }, [user])
+  useEffect(() => { if (user) fetchData() }, [user?.id])
 
   const fetchData = async () => {
     setIsLoading(true)

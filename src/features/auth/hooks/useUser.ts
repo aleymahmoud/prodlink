@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import type { Profile } from '@/shared/lib/db/schema'
 
 interface UseUserReturn {
@@ -51,13 +51,18 @@ export function useUser(): UseUserReturn {
 
   const isLoading = status === 'loading' || isLoadingProfile
 
-  return {
-    user: session?.user ? {
+  const user = useMemo(() => {
+    if (!session?.user) return null
+    return {
       id: session.user.id,
       email: session.user.email || '',
       name: session.user.name || '',
       role: session.user.role || 'engineer',
-    } : null,
+    }
+  }, [session?.user?.id, session?.user?.email, session?.user?.name, session?.user?.role])
+
+  return {
+    user,
     profile,
     isLoading,
     error,
