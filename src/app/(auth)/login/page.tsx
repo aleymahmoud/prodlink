@@ -1,9 +1,22 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Factory, BarChart3, Shield, Zap, ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
+
+function mapAuthError(code: string): string {
+  switch (code) {
+    case 'CredentialsSignin':
+      return 'Invalid username/email or password'
+    case 'Configuration':
+      return 'Sign-in is misconfigured on the server. Please contact your administrator.'
+    case 'AccessDenied':
+      return 'Access denied. Your account may be inactive.'
+    default:
+      return 'Unable to sign in. Please try again.'
+  }
+}
 
 function LoginForm() {
   const [login, setLogin] = useState('')
@@ -17,6 +30,13 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const urlError = searchParams.get('error')
+
+  useEffect(() => {
+    if (urlError) {
+      setError(mapAuthError(urlError))
+    }
+  }, [urlError])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,11 +51,7 @@ function LoginForm() {
     })
 
     if (result?.error) {
-      const friendlyMessage =
-        result.error === 'CredentialsSignin'
-          ? 'Invalid username/email or password'
-          : 'Unable to sign in. Please try again.'
-      setError(friendlyMessage)
+      setError(mapAuthError(result.error))
       setIsLoading(false)
       return
     }
