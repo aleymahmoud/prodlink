@@ -31,7 +31,11 @@ function LoginForm() {
     })
 
     if (result?.error) {
-      setError(result.error)
+      const friendlyMessage =
+        result.error === 'CredentialsSignin'
+          ? 'Invalid username/email or password'
+          : 'Unable to sign in. Please try again.'
+      setError(friendlyMessage)
       setIsLoading(false)
       return
     }

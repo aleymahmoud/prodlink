@@ -11,52 +11,49 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.login || !credentials?.password) {
-          throw new Error('Username/email and password are required');
+          return null;
         }
 
         const login = (credentials.login as string).trim();
         const password = credentials.password as string;
 
-        // Dynamic imports to avoid loading pg in Edge runtime (middleware)
-        const { db, profiles } = await import('@/shared/lib/db');
-        const { eq, or } = await import('drizzle-orm');
-        const bcrypt = await import('bcryptjs');
+        try {
+          // Dynamic imports to avoid loading pg in Edge runtime (middleware)
+          const { db, profiles } = await import('@/shared/lib/db');
+          const { eq, or } = await import('drizzle-orm');
+          const bcrypt = await import('bcryptjs');
 
-        // Find user by email or username
-        const [user] = await db
-          .select()
-          .from(profiles)
-          .where(
-            login.includes('@')
-              ? eq(profiles.email, login)
-              : or(eq(profiles.username, login), eq(profiles.email, login))
-          )
-          .limit(1);
+          // Find user by email or username
+          const [user] = await db
+            .select()
+            .from(profiles)
+            .where(
+              login.includes('@')
+                ? eq(profiles.email, login)
+                : or(eq(profiles.username, login), eq(profiles.email, login))
+            )
+            .limit(1);
 
-        if (!user) {
-          throw new Error('Invalid username/email or password');
+          if (!user || !user.isActive || !user.passwordHash) {
+            return null;
+          }
+
+          // Verify password
+          const isValid = await bcrypt.compare(password, user.passwordHash);
+          if (!isValid) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.fullName,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error('Authorize error:', error);
+          return null;
         }
-
-        if (!user.isActive) {
-          throw new Error('Account is deactivated');
-        }
-
-        if (!user.passwordHash) {
-          throw new Error('Please use Google sign-in or reset your password');
-        }
-
-        // Verify password
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) {
-          throw new Error('Invalid username/email or password');
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.fullName,
-          role: user.role,
-        };
       },
     }),
     // Uncomment and add Google credentials to enable Google sign-in
